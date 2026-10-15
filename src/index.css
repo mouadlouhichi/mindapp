@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --c-primary-50: #DAE7DE;
+    --c-primary-100: #BCD0C8;
+    --c-primary-6000: #175C62;
+    --c-primary-700: #1A2F32;
+    --c-primary-800: #0E3337;
+    --c-primary-900: #053333;
+
+    --c-secondary-50: #FCFCF8;
+    --c-secondary-100: #FCF2E8;
+    --c-secondary-200: #F0E3C0;
+    --c-secondary-800: #FF874E;
+
+    --c-deep-teal: #123F40;
+    --c-sand-cta: #F1E8D7;
+
+    --font-display: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+    --font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-arabic: 'Cairo', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: #FCFCF8;
+    color: #1A2F32;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, .font-display, .font-serif {
+    font-family: var(--font-display);
+  }
+
+  /* RTL Arabic Typography Reset as required by MindRested Taste Skill */
+  [dir="rtl"] {
+    font-family: var(--font-arabic);
+    letter-spacing: normal;
+  }
+
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3,
+  [dir="rtl"] .font-display,
+  [dir="rtl"] .font-serif {
+    font-family: var(--font-arabic) !important;
+    letter-spacing: normal !important;
+    line-height: 1.4 !important;
+  }
+}
+
+/* Custom MindRested scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #FCFCF8;
+}
+::-webkit-scrollbar-thumb {
+  background: #BCD0C8;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #175C62;
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Prana & Zenith - AI Guided Meditation & Mindful Sanctuary",
+  "description": "Generate custom guided meditation sessions with unique visuals, soothing voiceovers via Gemini 3.8 Flash TTS, ultra high-res artwork with Gemini 3 Pro, and an AI Mindful Guide multi-turn chatbot.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
