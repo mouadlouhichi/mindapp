@@ -1,0 +1,13 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/src/assets/images/:file*",
+      "destination": "/images/:file*"
+    },
+    {
+      "source": "/((?!assets|images|favicon.ico|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

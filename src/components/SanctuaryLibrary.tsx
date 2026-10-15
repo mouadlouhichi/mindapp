@@ -10,6 +10,7 @@ import {
 import { MeditationSession } from '../types/meditation';
 import { HERO_IMAGE } from '../data/defaultSessions';
 import { Locale, TRANSLATIONS } from '../utils/i18n';
+import { resolveSessionImageUrl, MEDITATION_IMAGES } from '../assets/images';
 
 interface SanctuaryLibraryProps {
   sessions: MeditationSession[];
@@ -135,6 +136,10 @@ export const SanctuaryLibrary: React.FC<SanctuaryLibraryProps> = ({
               src={HERO_IMAGE}
               alt={t.heroPavilionCaption}
               referrerPolicy="no-referrer"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = MEDITATION_IMAGES.hero;
+              }}
               className="w-full h-full object-cover filter brightness-95"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -226,9 +231,13 @@ export const SanctuaryLibrary: React.FC<SanctuaryLibraryProps> = ({
             {/* Visual Frame */}
             <div className="relative aspect-[16/9] w-full overflow-hidden bg-stone-900">
               <img
-                src={session.imageUrl}
+                src={resolveSessionImageUrl(session.imageUrl, `${session.title} ${session.theme}`)}
                 alt={session.title}
                 referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = resolveSessionImageUrl(undefined, `${session.title} ${session.theme}`);
+                }}
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-103"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />

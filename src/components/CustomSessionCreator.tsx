@@ -49,6 +49,7 @@ const VOICES = [
 ];
 
 const SOUNDSCAPES: { id: SoundscapeType; name: string; desc: string }[] = [
+  { id: 'calm_piano', name: 'Meditative Felt Piano', desc: 'Gentle acoustic piano chords & arpeggios' },
   { id: 'tibetan_bowls', name: 'Tibetan Singing Bowls', desc: 'Resonant harmonic bronze' },
   { id: 'ocean_waves', name: 'Ocean Surf', desc: 'Rhythmic rolling sea tide' },
   { id: 'forest_rain', name: 'Forest Rain', desc: 'Gentle canopy droplets' },

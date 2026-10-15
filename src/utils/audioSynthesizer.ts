@@ -76,6 +76,9 @@ class SoundscapeSynthesizer {
       case 'zen_windchimes':
         this.startZenWindchimes();
         break;
+      case 'calm_piano':
+        this.startCalmPiano();
+        break;
     }
   }
 
@@ -328,6 +331,174 @@ class SoundscapeSynthesizer {
         }
       }
     }, 2800);
+    this.intervalIds.push(interval);
+  }
+
+  // 6. Calm Meditative Felt Piano (Eno/Satie Inspired Acoustic Chords & Arpeggios)
+  public playPianoNote(freq: number, velocity: number = 0.35, pan: number = 0) {
+    this.initContext();
+    if (!this.ctx || !this.masterGain) return;
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+
+    // Multi-harmonic soft felt piano model
+    const fundOsc = ctx.createOscillator();
+    const h2Osc = ctx.createOscillator();
+    const h3Osc = ctx.createOscillator();
+
+    fundOsc.type = 'sine';
+    fundOsc.frequency.setValueAtTime(freq, now);
+
+    h2Osc.type = 'sine';
+    h2Osc.frequency.setValueAtTime(freq * 2, now);
+
+    h3Osc.type = 'triangle';
+    h3Osc.frequency.setValueAtTime(freq * 3, now);
+
+    const noteGain = ctx.createGain();
+    const h2Gain = ctx.createGain();
+    const h3Gain = ctx.createGain();
+
+    h2Gain.gain.setValueAtTime(0.22, now);
+    h3Gain.gain.setValueAtTime(0.06, now);
+
+    fundOsc.connect(noteGain);
+    h2Osc.connect(h2Gain);
+    h2Gain.connect(noteGain);
+    h3Osc.connect(h3Gain);
+    h3Gain.connect(noteGain);
+
+    // Warm Lowpass Filter (Felt Piano Muffle)
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    const cutoff = Math.min(2200, Math.max(400, freq * 3.5));
+    filter.frequency.setValueAtTime(cutoff, now);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(220, cutoff * 0.45), now + 3.0);
+    filter.Q.setValueAtTime(0.8, now);
+
+    noteGain.connect(filter);
+
+    // Dynamic ADSR Envelope
+    const ampGain = ctx.createGain();
+    ampGain.gain.setValueAtTime(0.0001, now);
+    ampGain.gain.linearRampToValueAtTime(velocity * 0.38, now + 0.02);
+    ampGain.gain.exponentialRampToValueAtTime(0.0001, now + 5.2);
+
+    filter.connect(ampGain);
+
+    if (ctx.createStereoPanner) {
+      const panner = ctx.createStereoPanner();
+      panner.pan.setValueAtTime(Math.max(-0.7, Math.min(0.7, pan)), now);
+      ampGain.connect(panner);
+      panner.connect(this.masterGain);
+    } else {
+      ampGain.connect(this.masterGain);
+    }
+
+    fundOsc.start(now);
+    h2Osc.start(now);
+    h3Osc.start(now);
+
+    fundOsc.stop(now + 5.5);
+    h2Osc.stop(now + 5.5);
+    h3Osc.stop(now + 5.5);
+
+    this.activeNodes.push(fundOsc, h2Osc, h3Osc, noteGain, ampGain, filter);
+  }
+
+  public playPianoChord(frequencies: number[], velocity: number = 0.3) {
+    frequencies.forEach((freq, idx) => {
+      window.setTimeout(() => {
+        if (!this.ctx) return;
+        const pan = (idx - (frequencies.length - 1) / 2) * 0.22;
+        this.playPianoNote(freq, velocity * (0.85 + Math.random() * 0.25), pan);
+      }, idx * 120);
+    });
+  }
+
+  // Pure Sacred Singing Bell / Chime for stage transitions
+  public playSingingBell(freq: number = 432) {
+    this.initContext();
+    if (!this.ctx || !this.masterGain) return;
+    const ctx = this.ctx;
+    const now = ctx.currentTime;
+
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const bellGain = ctx.createGain();
+
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(freq, now);
+
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(freq * 2.76, now); // Harmonic Tibetan bowl overtone
+
+    const osc2Gain = ctx.createGain();
+    osc2Gain.gain.setValueAtTime(0.2, now);
+
+    osc1.connect(bellGain);
+    osc2.connect(osc2Gain);
+    osc2Gain.connect(bellGain);
+
+    bellGain.gain.setValueAtTime(0.0001, now);
+    bellGain.gain.linearRampToValueAtTime(0.25, now + 0.03);
+    bellGain.gain.exponentialRampToValueAtTime(0.0001, now + 5.5);
+
+    bellGain.connect(this.masterGain);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 5.8);
+    osc2.stop(now + 5.8);
+
+    this.activeNodes.push(osc1, osc2, bellGain);
+  }
+
+  private startCalmPiano() {
+    if (!this.ctx || !this.masterGain) return;
+    const ctx = this.ctx;
+    const master = this.masterGain;
+
+    // Warm sub-bass foundation
+    const subOsc = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    subOsc.type = 'sine';
+    subOsc.frequency.setValueAtTime(65.41, ctx.currentTime); // C2
+    subGain.gain.setValueAtTime(0.04, ctx.currentTime);
+    subOsc.connect(subGain);
+    subGain.connect(master);
+    subOsc.start();
+    this.activeNodes.push(subOsc, subGain);
+
+    // Ethereal chord progressions (Cmaj9, Am9, Fmaj7, G6, Em7)
+    const progressions = [
+      [130.81, 196.00, 246.94, 329.63, 493.88], // Cmaj9 (C3, G3, B3, E4, B4)
+      [110.00, 164.81, 261.63, 329.63, 392.00], // Am9 (A2, E3, C4, E4, G4)
+      [87.31, 130.81, 220.00, 329.63, 523.25],  // Fmaj7 (F2, C3, A3, E4, C5)
+      [98.00, 146.83, 246.94, 293.66, 392.00],  // G6 (G2, D3, B3, D4, G4)
+      [82.41, 123.47, 196.00, 293.66, 329.63],  // Em7 (E2, B2, G3, D4, E4)
+    ];
+
+    let chordIdx = 0;
+
+    const playNextChord = () => {
+      if (!this.isPlaying || !this.ctx) return;
+      const chord = progressions[chordIdx % progressions.length];
+      chordIdx++;
+
+      this.playPianoChord(chord, 0.32);
+
+      // Random delicate melody note in between
+      window.setTimeout(() => {
+        if (!this.isPlaying || !this.ctx) return;
+        const melodyNotes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];
+        const randomNote = melodyNotes[Math.floor(Math.random() * melodyNotes.length)];
+        this.playPianoNote(randomNote, 0.22, (Math.random() - 0.5) * 0.6);
+      }, 2100);
+    };
+
+    playNextChord();
+    const interval = window.setInterval(playNextChord, 4600);
     this.intervalIds.push(interval);
   }
 }

@@ -14,7 +14,7 @@ export interface BreathingPattern {
   description: string;
 }
 
-export type SoundscapeType = 'tibetan_bowls' | 'ocean_waves' | 'forest_rain' | 'binaural_theta' | 'zen_windchimes' | 'none';
+export type SoundscapeType = 'tibetan_bowls' | 'ocean_waves' | 'forest_rain' | 'binaural_theta' | 'zen_windchimes' | 'calm_piano' | 'none';
 
 export interface MeditationSession {
   id: string;
@@ -41,8 +41,8 @@ export interface MeditationSession {
   playsCount?: number;
 }
 
-export type ChatRole = 'zen-master' | 'serenity-coach' | 'instant-calmer';
-export type GeminiModel = 'gemini-4-argon' | 'gemini-3.8-flash' | 'gemini-3.1-flash-lite';
+export type ChatRole = 'zen-master' | 'serenity-coach' | 'instant-calmer' | 'grok-sage';
+export type GeminiModel = 'gemini-4-argon' | 'gemini-3.8-flash' | 'gemini-3.1-flash-lite' | 'grok-2-latest';
 
 export interface ChatMessage {
   id: string;

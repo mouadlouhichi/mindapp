@@ -13,18 +13,40 @@ import { BreathingVisualizer } from './components/BreathingVisualizer';
 import { DEFAULT_SESSIONS } from './data/defaultSessions';
 import { MeditationSession } from './types/meditation';
 import { Locale, TRANSLATIONS } from './utils/i18n';
+import { resolveSessionImageUrl } from './assets/images';
 
-const STORAGE_KEY = 'mindrested_sessions_v1';
+const STORAGE_KEY = 'mindrested_sessions_v2';
 const LOCALE_KEY = 'mindrested_locale_v1';
+
+// Auto-repair and sanitize any legacy or cached sessions
+function sanitizeSessions(rawList: any[]): MeditationSession[] {
+  return rawList.map((session) => {
+    // If it's a curated default session, align with fresh DEFAULT_SESSIONS
+    const matchedDefault = DEFAULT_SESSIONS.find((d) => d.id === session.id);
+    if (matchedDefault) {
+      return {
+        ...matchedDefault,
+        isFavorite: Boolean(session.isFavorite),
+        playsCount: session.playsCount || matchedDefault.playsCount,
+      };
+    }
+
+    // For custom sessions, verify and resolve the image URL safely
+    return {
+      ...session,
+      imageUrl: resolveSessionImageUrl(session.imageUrl, `${session.title || ''} ${session.theme || ''}`),
+    };
+  });
+}
 
 export default function App() {
   const [sessions, setSessions] = useState<MeditationSession[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem('mindrested_sessions_v2') || localStorage.getItem('mindrested_sessions_v1');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          return sanitizeSessions(parsed);
         }
       }
     } catch (e) {

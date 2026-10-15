@@ -24,6 +24,59 @@ const ai = new GoogleGenAI({
   },
 });
 
+const GROK_API_KEY = process.env.GROK_API_KEY || process.env.XAI_API_KEY;
+
+// Grok (xAI) API helper
+async function callGrokChat({
+  messages,
+  systemInstruction,
+  model = 'grok-2-latest',
+  temperature = 0.7,
+}: {
+  messages: Array<{ role: string; content?: string; text?: string }>;
+  systemInstruction?: string;
+  model?: string;
+  temperature?: number;
+}) {
+  if (!GROK_API_KEY) {
+    throw new Error('GROK_API_KEY is not configured in environment variables');
+  }
+
+  const formattedMessages: Array<{ role: string; content: string }> = [];
+  if (systemInstruction) {
+    formattedMessages.push({ role: 'system', content: systemInstruction });
+  }
+
+  for (const m of messages) {
+    formattedMessages.push({
+      role: m.role === 'assistant' || m.role === 'model' ? 'assistant' : 'user',
+      content: m.content || m.text || '',
+    });
+  }
+
+  const response = await fetch('https://api.x.ai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${GROK_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: model || 'grok-2-latest',
+      messages: formattedMessages,
+      temperature,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Grok API error (${response.status}): ${errorText}`);
+  }
+
+  const data = await response.json();
+  const reply = data.choices?.[0]?.message?.content || 'Be mindful of this quiet moment.';
+  return { reply, modelUsed: data.model || model };
+}
+
 // Helper for error responses
 const handleError = (res: express.Response, error: any, defaultMsg: string) => {
   console.error(defaultMsg, error);
@@ -36,6 +89,15 @@ const handleError = (res: express.Response, error: any, defaultMsg: string) => {
   });
 };
 
+// AI Status Endpoint
+app.get('/api/ai-status', (req, res) => {
+  res.json({
+    grokConfigured: Boolean(GROK_API_KEY),
+    geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
+    grokModel: 'grok-2-latest',
+  });
+});
+
 // 1. Multi-Turn Chat Endpoint
 // Requirements: Maintain conversation history, scrollable thread, specific roles with system instructions.
 // Models: gemini-4-argon for complex tasks, gemini-3.8-flash for general tasks, gemini-3.1-flash-lite for fast tasks.
@@ -45,6 +107,29 @@ app.post('/api/chat', async (req, res) => {
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'Messages array is required' });
+    }
+
+    // Check if Grok AI is requested or if Gemini key is missing while Grok key is present
+    if (role === 'grok' || role === 'grok-sage' || modelOverride?.toLowerCase().includes('grok') || (!process.env.GEMINI_API_KEY && GROK_API_KEY)) {
+      try {
+        const grokInstruction = `You are Grok Mindful Sage, an enlightened, cosmic, and deeply compassionate meditation guide.
+You blend philosophical inquiry, existential calm, and warm somatic grounding.
+Answer with poetic warmth, serenity, and actionable mindfulness practices.`;
+        const { reply, modelUsed } = await callGrokChat({
+          messages,
+          systemInstruction: grokInstruction,
+          model: modelOverride?.toLowerCase().includes('grok') ? modelOverride : 'grok-2-latest',
+        });
+        return res.json({ text: reply, modelUsed: `${modelUsed} (xAI Grok)` });
+      } catch (grokErr: any) {
+        console.warn('Grok chat error, attempting Gemini/offline:', grokErr?.message);
+        if (!process.env.GEMINI_API_KEY) {
+          return res.json({
+            text: `[Grok AI Notice]: Grok API key was detected but returned: ${grokErr?.message}. Soften your shoulders and breathe gently while verifying your Grok API key.`,
+            modelUsed: 'grok-fallback',
+          });
+        }
+      }
     }
 
     // Role-based model selection and system instructions
@@ -392,6 +477,18 @@ Provide a JSON response with the following schema:
 }
 
 Respond ONLY with valid JSON. Do not wrap in markdown or backticks.`;
+
+    if ((req.body.useGrok || req.body.aiProvider === 'grok') && GROK_API_KEY) {
+      const grokRes = await callGrokChat({
+        messages: [{ role: 'user', content: prompt }],
+        systemInstruction: 'You are a contemplative meditation teacher. Return valid JSON only, without markdown fences.',
+        model: 'grok-2-latest',
+        temperature: 0.7,
+      });
+      let cleaned = grokRes.reply.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+      const parsed = JSON.parse(cleaned);
+      return res.json({ ...parsed, modelUsed: 'grok-2-latest' });
+    }
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.8-flash',
