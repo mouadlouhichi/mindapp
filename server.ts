@@ -294,16 +294,16 @@ app.post('/api/generate-image', async (req, res) => {
   } catch (error: any) {
     console.warn('Image generation fallback to curated sanctuary artwork:', error?.message);
     const p = (req.body.prompt || '').toLowerCase();
-    let fallbackUrl = 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600&auto=format&fit=crop'; // Nebula
+    let fallbackUrl = '/images/session_cosmic_nebula.jpg'; // Deep Space & Starlight
 
     if (p.includes('bamboo') || p.includes('forest') || p.includes('rain')) {
-      fallbackUrl = 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?q=80&w=1600&auto=format&fit=crop';
+      fallbackUrl = '/images/session_bamboo_mist.jpg';
     } else if (p.includes('lotus') || p.includes('flower') || p.includes('pond')) {
-      fallbackUrl = 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=1600&auto=format&fit=crop';
+      fallbackUrl = '/images/session_golden_lotus.jpg';
     } else if (p.includes('mountain') || p.includes('peak') || p.includes('summit')) {
-      fallbackUrl = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1600&auto=format&fit=crop';
-    } else if (p.includes('ocean') || p.includes('sea') || p.includes('water')) {
-      fallbackUrl = 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600&auto=format&fit=crop';
+      fallbackUrl = '/images/session_zen_mountain.jpg';
+    } else if (p.includes('sanctuary') || p.includes('temple') || p.includes('pavilion')) {
+      fallbackUrl = '/images/hero_meditation_sanctuary.jpg';
     }
 
     res.json({
@@ -464,6 +464,11 @@ Respond ONLY with valid JSON. Do not wrap in markdown or backticks.`;
     });
   }
 });
+
+// Serve bundled static images directly from public and src/assets/images
+app.use('/images', express.static(path.resolve(__dirname, 'public/images')));
+app.use('/public', express.static(path.resolve(__dirname, 'public')));
+app.use('/src/assets/images', express.static(path.resolve(__dirname, 'src/assets/images')));
 
 // Vite middleware in dev, static files in production
 if (process.env.NODE_ENV !== 'production') {

@@ -10,6 +10,7 @@ import {
   SoundscapeType,
 } from '../types/meditation';
 import { Locale, TRANSLATIONS } from '../utils/i18n';
+import { MEDITATION_IMAGES } from '../assets/images';
 
 interface CustomSessionCreatorProps {
   onSessionCreated: (session: MeditationSession, startImmediately?: boolean) => void;
@@ -31,12 +32,12 @@ const THEMES = [
 ];
 
 const SETTINGS = [
-  { label: 'Kyoto Bamboo Grove', prompt: 'Misty emerald bamboo grove in Kyoto with morning dew and quiet stone lanterns' },
-  { label: 'Celestial Deep Starlight', prompt: 'Ethereal celestial nebula with soft violet stardust and cosmic auroras' },
-  { label: 'Golden Dawn Lotus Pond', prompt: 'Sacred golden water lily blossom floating on a still mirror pond at sunrise' },
-  { label: 'Alpine Mountain Summit', prompt: 'Majestic solitary granite mountain peak above a quiet sea of dawn clouds' },
-  { label: 'Bioluminescent Twilight Cove', prompt: 'Tranquil turquoise ocean shore with gentle bioluminescent twilight waves' },
-  { label: 'Ancient Redwood Sanctuary', prompt: 'Ancient misty redwood forest with morning sunbeams piercing the high canopy' },
+  { label: 'Kyoto Bamboo Grove', prompt: 'Misty emerald bamboo grove in Kyoto with morning dew and quiet stone lanterns', image: MEDITATION_IMAGES.bambooMist },
+  { label: 'Celestial Deep Starlight', prompt: 'Ethereal celestial nebula with soft violet stardust and cosmic auroras', image: MEDITATION_IMAGES.cosmicNebula },
+  { label: 'Golden Dawn Lotus Pond', prompt: 'Sacred golden water lily blossom floating on a still mirror pond at sunrise', image: MEDITATION_IMAGES.goldenLotus },
+  { label: 'Alpine Mountain Summit', prompt: 'Majestic solitary granite mountain peak above a quiet sea of dawn clouds', image: MEDITATION_IMAGES.zenMountain },
+  { label: 'Sanctuary Pavilion', prompt: 'Sacred tranquil meditation sanctuary pavilion overlooking sunrise lotus lake', image: MEDITATION_IMAGES.hero },
+  { label: 'Ancient Redwood Sanctuary', prompt: 'Ancient misty redwood forest with morning sunbeams piercing the high canopy', image: MEDITATION_IMAGES.bambooMist },
 ];
 
 const VOICES = [
@@ -155,7 +156,7 @@ export const CustomSessionCreator: React.FC<CustomSessionCreatorProps> = ({
         mood: 'Serene & Centered',
         setting: chosenSetting.label,
         visualPrompt: finalPrompt,
-        imageUrl: generatedImageUrl || '/src/assets/images/session_bamboo_mist_1792060522120.jpg',
+        imageUrl: generatedImageUrl || chosenSetting.image || MEDITATION_IMAGES.bambooMist,
         imageSize,
         imageAspectRatio,
         audioBase64: generatedAudioBase64,
@@ -288,20 +289,28 @@ export const CustomSessionCreator: React.FC<CustomSessionCreatorProps> = ({
               </span>
             </div>
 
-            {/* Atmospheric Setting Options */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {/* Atmospheric Setting Options with Real Imagery */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {SETTINGS.map((s, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => setSelectedSettingIndex(idx)}
-                  className={`p-3.5 text-start rounded-xl border transition-colors ${
+                  className={`p-2.5 text-start rounded-xl border transition-all flex items-center gap-3 ${
                     selectedSettingIndex === idx
-                      ? 'bg-[#DAE7DE]/60 border-[#175C62] text-[#053333] font-medium'
-                      : 'bg-white border-[#BCD0C8]/80 text-[#1A2F32]/80 hover:border-[#175C62]/50'
+                      ? 'bg-[#DAE7DE]/70 border-[#175C62] text-[#053333] shadow-xs ring-1 ring-[#175C62]/30'
+                      : 'bg-white border-[#BCD0C8]/80 text-[#1A2F32]/80 hover:border-[#175C62]/50 hover:bg-[#DAE7DE]/20'
                   }`}
                 >
-                  <div className="text-xs font-medium">{s.label}</div>
+                  <img
+                    src={s.image}
+                    alt={s.label}
+                    className="size-11 rounded-lg object-cover shrink-0 border border-black/10 shadow-xs"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs font-semibold truncate text-[#053333]">{s.label}</div>
+                    <div className="text-[10px] text-[#175C62]/70 truncate">{s.prompt}</div>
+                  </div>
                 </button>
               ))}
             </div>

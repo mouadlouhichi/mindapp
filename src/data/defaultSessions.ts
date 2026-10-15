@@ -1,6 +1,7 @@
 import { MeditationSession } from '../types/meditation';
+import { MEDITATION_IMAGES } from '../assets/images';
 
-export const HERO_IMAGE = '/src/assets/images/hero_meditation_sanctuary_1792060521641.jpg';
+export const HERO_IMAGE = MEDITATION_IMAGES.hero;
 
 export const DEFAULT_SESSIONS: MeditationSession[] = [
   {
@@ -14,7 +15,7 @@ export const DEFAULT_SESSIONS: MeditationSession[] = [
     visualPrompt: 'A tranquil meditating silhouette beneath a vast breathtaking violet and indigo starry nebula, soft glowing stardust, glowing aurora ripples, cosmic serenity, cinematic 8k wallpaper',
     imageSize: '2K',
     imageAspectRatio: '16:9',
-    imageUrl: '/src/assets/images/session_cosmic_nebula_1792060521709.jpg',
+    imageUrl: MEDITATION_IMAGES.cosmicNebula,
     audioVoice: 'Kore',
     audioStyle: 'Slow, soft whisper-like cadence, warm and deeply soporific with gentle long pauses',
     mantra: 'I release this day to the stars. My body is resting, my mind is completely still.',
@@ -77,7 +78,7 @@ Feel the gentle weight of gravity holding you safely, cradling you into total ea
     visualPrompt: 'A peaceful misty bamboo forest path with droplets of rain hanging from emerald leaves, soft diffused morning sunlight, stone lanterns, atmospheric zen photography',
     imageSize: '1K',
     imageAspectRatio: '16:9',
-    imageUrl: '/src/assets/images/session_bamboo_mist_1792060522120.jpg',
+    imageUrl: MEDITATION_IMAGES.bambooMist,
     audioVoice: 'Zephyr',
     audioStyle: 'Calm, steady, deeply reassuring and grounding voice with soothing cadence',
     mantra: 'Like the bamboo in the storm, I bend with life without breaking. Peace is my center.',
@@ -140,7 +141,7 @@ Picture tall stalks of green bamboo rising all around you. They have survived st
     visualPrompt: 'A radiant golden lotus flower floating gracefully on still turquoise water, warm morning sunlight rays, sacred mandala ripples, peaceful spiritual fine art',
     imageSize: '2K',
     imageAspectRatio: '16:9',
-    imageUrl: '/src/assets/images/session_golden_lotus_1792060522202.jpg',
+    imageUrl: MEDITATION_IMAGES.goldenLotus,
     audioVoice: 'Kore',
     audioStyle: 'Tender, deeply compassionate, loving and warm cadence with soft pauses',
     mantra: 'May I be happy. May I be free from suffering. May all beings know peace.',
@@ -203,7 +204,7 @@ Imagine a golden lotus flower blooming softly in the warm dawn. Say softly in yo
     visualPrompt: 'A monumental solitary mountain summit bathed in clean golden morning light, surrounded by quiet sea of clouds, sharp granite peaks, zen clarity minimal landscape',
     imageSize: '1K',
     imageAspectRatio: '16:9',
-    imageUrl: '/src/assets/images/session_zen_mountain_1792060574766.jpg',
+    imageUrl: MEDITATION_IMAGES.zenMountain,
     audioVoice: 'Fenrir',
     audioStyle: 'Deep, resonant, grounded, authoritative yet deeply peaceful voice',
     mantra: 'Thoughts pass like clouds across the sky. I am the mountain: silent, steady, and unshakeable.',
