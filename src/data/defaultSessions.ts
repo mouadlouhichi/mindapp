@@ -145,7 +145,7 @@ Picture tall stalks of green bamboo rising all around you. They have survived st
     audioVoice: 'Kore',
     audioStyle: 'Tender, deeply compassionate, loving and warm cadence with soft pauses',
     mantra: 'May I be happy. May I be free from suffering. May all beings know peace.',
-    soundscape: 'tibetan_bowls',
+    soundscape: 'calm_piano',
     breathingPattern: {
       name: 'Heart Coherence (5-5)',
       inhale: 5,

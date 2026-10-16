@@ -32,14 +32,17 @@ async function callGrokChat({
   systemInstruction,
   model = 'grok-2-latest',
   temperature = 0.7,
+  apiKey,
 }: {
   messages: Array<{ role: string; content?: string; text?: string }>;
   systemInstruction?: string;
   model?: string;
   temperature?: number;
+  apiKey?: string;
 }) {
-  if (!GROK_API_KEY) {
-    throw new Error('GROK_API_KEY is not configured in environment variables');
+  const effectiveKey = apiKey || GROK_API_KEY;
+  if (!effectiveKey) {
+    throw new Error('GROK_API_KEY is not configured in environment variables or request headers');
   }
 
   const formattedMessages: Array<{ role: string; content: string }> = [];
@@ -58,7 +61,7 @@ async function callGrokChat({
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${GROK_API_KEY}`,
+      Authorization: `Bearer ${effectiveKey}`,
     },
     body: JSON.stringify({
       model: model || 'grok-2-latest',
@@ -109,8 +112,9 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'Messages array is required' });
     }
 
+    const grokKeyToUse = req.body?.grokApiKey || (req.headers['x-grok-api-key'] as string) || GROK_API_KEY;
     // Check if Grok AI is requested or if Gemini key is missing while Grok key is present
-    if (role === 'grok' || role === 'grok-sage' || modelOverride?.toLowerCase().includes('grok') || (!process.env.GEMINI_API_KEY && GROK_API_KEY)) {
+    if (role === 'grok' || role === 'grok-sage' || modelOverride?.toLowerCase().includes('grok') || (!process.env.GEMINI_API_KEY && grokKeyToUse)) {
       try {
         const grokInstruction = `You are Grok Mindful Sage, an enlightened, cosmic, and deeply compassionate meditation guide.
 You blend philosophical inquiry, existential calm, and warm somatic grounding.
@@ -119,13 +123,14 @@ Answer with poetic warmth, serenity, and actionable mindfulness practices.`;
           messages,
           systemInstruction: grokInstruction,
           model: modelOverride?.toLowerCase().includes('grok') ? modelOverride : 'grok-2-latest',
+          apiKey: grokKeyToUse,
         });
         return res.json({ text: reply, modelUsed: `${modelUsed} (xAI Grok)` });
       } catch (grokErr: any) {
         console.warn('Grok chat error, attempting Gemini/offline:', grokErr?.message);
         if (!process.env.GEMINI_API_KEY) {
           return res.json({
-            text: `[Grok AI Notice]: Grok API key was detected but returned: ${grokErr?.message}. Soften your shoulders and breathe gently while verifying your Grok API key.`,
+            text: `[Grok AI Notice]: Grok API key returned: ${grokErr?.message}. Soften your shoulders and breathe gently.`,
             modelUsed: 'grok-fallback',
           });
         }
@@ -478,12 +483,14 @@ Provide a JSON response with the following schema:
 
 Respond ONLY with valid JSON. Do not wrap in markdown or backticks.`;
 
-    if ((req.body.useGrok || req.body.aiProvider === 'grok') && GROK_API_KEY) {
+    const grokKeyToUse = req.body?.grokApiKey || (req.headers['x-grok-api-key'] as string) || GROK_API_KEY;
+    if ((req.body.useGrok || req.body.aiProvider === 'grok') && grokKeyToUse) {
       const grokRes = await callGrokChat({
         messages: [{ role: 'user', content: prompt }],
         systemInstruction: 'You are a contemplative meditation teacher. Return valid JSON only, without markdown fences.',
         model: 'grok-2-latest',
         temperature: 0.7,
+        apiKey: grokKeyToUse,
       });
       let cleaned = grokRes.reply.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
       const parsed = JSON.parse(cleaned);

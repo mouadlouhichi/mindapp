@@ -272,7 +272,7 @@ export const SanctuaryLibrary: React.FC<SanctuaryLibraryProps> = ({
                   className="flex items-center gap-2 min-h-11 px-6 py-2.5 rounded-full bg-[#175C62] hover:bg-[#123F40] text-[#DAE7DE] font-semibold text-xs tracking-wide shadow-xl transition-transform transform scale-95 group-hover:scale-100"
                 >
                   <Play className="size-3.5 fill-[#DAE7DE]" />
-                  <span>{t.beginSession}</span>
+                  <span>Therapist & Piano</span>
                 </button>
               </div>
             </div>
@@ -307,9 +307,9 @@ export const SanctuaryLibrary: React.FC<SanctuaryLibraryProps> = ({
               <div className="pt-3 border-t border-[#BCD0C8]/60 flex items-center justify-between text-xs text-[#1A2F32]/80">
                 <div className="flex items-center gap-2 text-[11px] font-medium">
                   <Volume2 className="size-3.5 text-[#175C62]" />
-                  <span>{session.audioVoice || 'Kore'} {t.voiceLabel}</span>
+                  <span>Therapist {session.audioVoice || 'Kore'}</span>
                   <span aria-hidden="true">·</span>
-                  <span className="capitalize">{session.soundscape.replace('_', ' ')}</span>
+                  <span className="capitalize">{session.soundscape === 'calm_piano' ? '🎹 Felt Piano' : session.soundscape.replace('_', ' ')}</span>
                 </div>
 
                 <button

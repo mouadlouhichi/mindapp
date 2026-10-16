@@ -501,6 +501,148 @@ class SoundscapeSynthesizer {
     const interval = window.setInterval(playNextChord, 4600);
     this.intervalIds.push(interval);
   }
+
+  // 7. Therapist Vocal Effects Processing Chain (Warmth EQ + Sanctuary Space Reverb)
+  private mediaElementSources = new WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>();
+  private vocalWarmthFilter: BiquadFilterNode | null = null;
+  private vocalSoftFilter: BiquadFilterNode | null = null;
+  private vocalReverbGain: GainNode | null = null;
+  private vocalDryGain: GainNode | null = null;
+
+  public attachTherapistEffects(
+    audioEl: HTMLAudioElement,
+    options: { enableWarmth?: boolean; enableReverb?: boolean; reverbAmount?: number } = {}
+  ) {
+    try {
+      this.initContext();
+      if (!this.ctx) return;
+      const ctx = this.ctx;
+
+      let source = this.mediaElementSources.get(audioEl);
+      if (!source) {
+        source = ctx.createMediaElementSource(audioEl);
+        this.mediaElementSources.set(audioEl, source);
+      }
+
+      // Warm low-shelf EQ (rich clinical warmth & intimacy)
+      const warmthEq = ctx.createBiquadFilter();
+      warmthEq.type = 'lowshelf';
+      warmthEq.frequency.setValueAtTime(240, ctx.currentTime);
+      warmthEq.gain.setValueAtTime(options.enableWarmth !== false ? 3.2 : 0, ctx.currentTime);
+      this.vocalWarmthFilter = warmthEq;
+
+      // Gentle high-shelf softening (eliminates harsh sibilance)
+      const softEq = ctx.createBiquadFilter();
+      softEq.type = 'highshelf';
+      softEq.frequency.setValueAtTime(6800, ctx.currentTime);
+      softEq.gain.setValueAtTime(options.enableWarmth !== false ? -2.8 : 0, ctx.currentTime);
+      this.vocalSoftFilter = softEq;
+
+      // Sanctuary Room Reverb & Delay
+      const delay1 = ctx.createDelay();
+      delay1.delayTime.setValueAtTime(0.045, ctx.currentTime);
+      const delay2 = ctx.createDelay();
+      delay2.delayTime.setValueAtTime(0.082, ctx.currentTime);
+      const reverbFeedback = ctx.createGain();
+      reverbFeedback.gain.setValueAtTime(0.24, ctx.currentTime);
+
+      const reverbDamping = ctx.createBiquadFilter();
+      reverbDamping.type = 'lowpass';
+      reverbDamping.frequency.setValueAtTime(2800, ctx.currentTime);
+
+      const dryGain = ctx.createGain();
+      dryGain.gain.setValueAtTime(0.9, ctx.currentTime);
+      this.vocalDryGain = dryGain;
+
+      const wetGain = ctx.createGain();
+      const revAmt = options.reverbAmount !== undefined ? options.reverbAmount : 0.28;
+      wetGain.gain.setValueAtTime(options.enableReverb !== false ? revAmt : 0, ctx.currentTime);
+      this.vocalReverbGain = wetGain;
+
+      // Route: source -> warmth -> soft -> split to dry + wet reverb -> destination
+      source.disconnect();
+      source.connect(warmthEq);
+      warmthEq.connect(softEq);
+
+      // Dry path
+      softEq.connect(dryGain);
+      dryGain.connect(ctx.destination);
+
+      // Wet delay/reverb network
+      softEq.connect(delay1);
+      delay1.connect(delay2);
+      delay2.connect(reverbDamping);
+      reverbDamping.connect(reverbFeedback);
+      reverbFeedback.connect(delay1);
+      reverbDamping.connect(wetGain);
+      wetGain.connect(ctx.destination);
+    } catch (e) {
+      console.warn('Therapist vocal effects setup skipped:', e);
+    }
+  }
+
+  public setVocalEffects(warmth: boolean, reverb: boolean, reverbLevel: number = 0.28) {
+    if (this.ctx) {
+      const now = this.ctx.currentTime;
+      if (this.vocalWarmthFilter) {
+        this.vocalWarmthFilter.gain.setTargetAtTime(warmth ? 3.2 : 0, now, 0.05);
+      }
+      if (this.vocalSoftFilter) {
+        this.vocalSoftFilter.gain.setTargetAtTime(warmth ? -2.8 : 0, now, 0.05);
+      }
+      if (this.vocalReverbGain) {
+        this.vocalReverbGain.gain.setTargetAtTime(reverb ? reverbLevel : 0, now, 0.05);
+      }
+    }
+  }
+
+  // 8. Instant Browser Speech Synthesis Fallback with Calming Cadence
+  public speakFallbackTherapist(
+    text: string,
+    onEnded?: () => void,
+    onStart?: () => void
+  ): { cancel: () => void } {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      return { cancel: () => {} };
+    }
+
+    window.speechSynthesis.cancel();
+    const cleanText = text.replace(/<breath>/gi, '... ').replace(/\[\d+:\d+\]/g, '').trim();
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+
+    // Warm, soothing therapeutic delivery
+    utterance.rate = 0.82; // gentle unhurried pacing
+    utterance.pitch = 0.96; // slightly warm lower pitch
+
+    const voices = window.speechSynthesis.getVoices();
+    // Prefer soothing English voices
+    const naturalVoice = voices.find(
+      (v) =>
+        (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Serena') || v.name.includes('Samantha')) &&
+        v.lang.startsWith('en')
+    );
+    if (naturalVoice) utterance.voice = naturalVoice;
+
+    utterance.onstart = () => {
+      if (onStart) onStart();
+    };
+
+    utterance.onend = () => {
+      if (onEnded) onEnded();
+    };
+
+    utterance.onerror = (e) => {
+      console.warn('Speech synthesis notice:', e);
+      if (onEnded) onEnded();
+    };
+
+    window.speechSynthesis.speak(utterance);
+
+    return {
+      cancel: () => window.speechSynthesis.cancel(),
+    };
+  }
 }
 
 export const soundscapeEngine = new SoundscapeSynthesizer();
+

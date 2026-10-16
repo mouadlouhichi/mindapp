@@ -172,11 +172,12 @@ class TherapistVoiceEngine {
         };
 
         // iOS Safari and Chrome keep-alive hack
-        if (this.synth.paused) {
-          this.synth.resume();
+        if (this.synth) {
+          if (this.synth.paused) {
+            this.synth.resume();
+          }
+          this.synth.speak(utterance);
         }
-
-        this.synth.speak(utterance);
       };
 
       // Slight pre-delay so bell and piano chord can ring softly before speaking

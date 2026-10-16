@@ -47,6 +47,16 @@ export const ROLES: RoleConfig[] = [
     badgeColor: 'text-sky-700 font-mono',
     description: '30-to-60 second acute panic relief, 5-4-3-2-1 grounding, and somatic resets.',
   },
+  {
+    id: 'grok-sage',
+    name: 'Grok Mindful Sage',
+    title: 'Cosmic & Existential Guide',
+    model: 'grok-2-latest',
+    tagline: 'Radical existential clarity, cosmic mindfulness & deep truth',
+    avatar: '🌌',
+    badgeColor: 'text-purple-700 font-mono',
+    description: 'Bridges deep contemplative philosophy, cosmic wonder, and pragmatic mental clarity.',
+  },
 ];
 
 const INITIAL_MESSAGES: Record<Locale, Record<ChatRole, string>> = {
@@ -54,16 +64,19 @@ const INITIAL_MESSAGES: Record<Locale, Record<ChatRole, string>> = {
     'zen-master': 'Peace to you, traveler. Like a stone dropped into still water, every thought creates ripples across your awareness. What question or inner tangle brings you to this sanctuary today?',
     'serenity-coach': 'Welcome. Take a gentle breath in and allow your shoulders to drop. I am here to help you navigate everyday stress, cultivate gratitude, or wind down for peaceful rest. How are you feeling in this moment?',
     'instant-calmer': 'I am right here with you. If you are experiencing sudden panic or racing thoughts, take a deep breath. Tell me what is happening, or say "ground me" for an immediate somatic reset.',
+    'grok-sage': 'Greetings from the cosmic silence. The universe has been meditating for 13.8 billion years, and in this breath, it experiences itself through you. What feeling, curiosity, or thought shall we explore together?',
   },
   fr: {
     'zen-master': 'Paix à vous. Comme une pierre glissant sur l’eau calme, chaque pensée crée des ondulations sur votre conscience. Quelle interrogation intérieure vous amène aujourd’hui ?',
     'serenity-coach': 'Bienvenue. Prenez une respiration douce et relâchez vos épaules. Je suis là pour vous accompagner face au stress quotidien, cultiver la gratitude ou trouver le calme. Comment vous sentez-vous ?',
     'instant-calmer': 'Je suis là avec vous. Si vous ressentez une montée d’anxiété, respirez profondément. Dites-moi ce que vous traversez, ou dites "ancrez-moi" pour un exercice somatique immédiat.',
+    'grok-sage': 'Salutations depuis le silence cosmique. Dans ce souffle, l’univers fait l’expérience de lui-même à travers vous. Quelle pensée ou sensation souhaitez-vous explorer ?',
   },
   ar: {
     'zen-master': 'السلام والسكينة لك. مثل قطرة ماء في بركة ساكنة، كل فكرة تخلق تموجات في وعيك. ما هو السؤال أو الشعور الذي تحمله في قلبك اليوم؟',
     'serenity-coach': 'أهلاً بك. خذ نفساً عميقاً وأرخِ كتفيك برفق. أنا هنا لمساعدتك على تجاوز توتر العمل، وتنمية الامتنان، والخلود إلى راحة هادئة. كيف تشعر في هذه اللحظة؟',
     'instant-calmer': 'أنا معك هنا الآن. إذا كنت تشعر بنوبة قلق مفاجئة أو تسارع في الأفكار، خذ نفساً عميقاً. أخبرني بما يحدث، أو اطلب تمريناً مهدئاً فورياً.',
+    'grok-sage': 'تحية من سكون الفضاء الواسع. يتأمل الكون في سكونه، وفي هذه اللحظة يتنفس عبر وعيك. ما السؤال أو المشاعر التي ترغب في استكشافها معاً؟',
   },
 };
 
@@ -84,6 +97,11 @@ const PROMPT_SUGGESTIONS: Record<Locale, Record<ChatRole, string[]>> = {
       'Guide me through a fast 1-minute box breathing cycle.',
       'Give me the 5-4-3-2-1 sensory grounding exercise.',
     ],
+    'grok-sage': [
+      'How does cosmic perspective dissolve daily anxiety?',
+      'What is the relationship between consciousness and silence?',
+      'Help me step out of ego chatter into radical presence.',
+    ],
   },
   fr: {
     'zen-master': [
@@ -101,6 +119,11 @@ const PROMPT_SUGGESTIONS: Record<Locale, Record<ChatRole, string[]>> = {
       'Guidez-moi dans une respiration carrée d’une minute.',
       'Donnez-moi l’exercice d’ancrage 5-4-3-2-1.',
     ],
+    'grok-sage': [
+      'Comment la perspective cosmique dissout-elle l’anxiété ?',
+      'Quelle est la relation entre conscience et silence ?',
+      'Aidez-moi à sortir du bavardage mental vers une présence pure.',
+    ],
   },
   ar: {
     'zen-master': [
@@ -117,6 +140,11 @@ const PROMPT_SUGGESTIONS: Record<Locale, Record<ChatRole, string[]>> = {
       'أشعر بنوبة قلق مفاجئة. ساعدني على التهدئة الآن.',
       'أرشدني لتنفس المربع السريع لمدة دقيقة.',
       'اشرح لي تمرين التهدئة بالحواس ٥-٤-٣-٢-١.',
+    ],
+    'grok-sage': [
+      'كيف تساعدنا النظرة الكونية في تبديد قلق الحياة اليومية؟',
+      'ما هي العلاقة بين الوعي وسكون الكون؟',
+      'ساعدني على تجاوز ضجيج الأفكار إلى حضور داخلي هادئ.',
     ],
   },
 };
@@ -166,6 +194,16 @@ export const ChatGuideModal: React.FC<ChatGuideModalProps> = ({
         timestamp: Date.now(),
         modelUsed: 'gemini-3.1-flash-lite',
         roleName: 'Instant Calmer Kai',
+      },
+    ],
+    'grok-sage': [
+      {
+        id: 'init-grok',
+        role: 'assistant',
+        content: INITIAL_MESSAGES[currentLocale]['grok-sage'],
+        timestamp: Date.now(),
+        modelUsed: 'grok-2-latest',
+        roleName: 'Grok Mindful Sage',
       },
     ],
   });

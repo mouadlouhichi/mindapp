@@ -13,11 +13,15 @@ import {
   Heart,
   ChevronLeft,
   Headphones,
+  Music,
+  Radio,
 } from 'lucide-react';
 import { MeditationSession, SoundscapeType } from '../types/meditation';
 import { soundscapeEngine } from '../utils/audioSynthesizer';
+import { therapistVoiceEngine } from '../utils/therapistVoiceEngine';
 import { BreathingVisualizer } from './BreathingVisualizer';
 import { Locale, TRANSLATIONS } from '../utils/i18n';
+import { resolveSessionImageUrl } from '../assets/images';
 
 interface SessionPlayerModalProps {
   session: MeditationSession;
@@ -42,6 +46,13 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
   const [voiceVolume, setVoiceVolume] = useState<number>(0.9);
   const [ambientVolume, setAmbientVolume] = useState<number>(0.35);
   const [currentSoundscape, setCurrentSoundscape] = useState<SoundscapeType>(session.soundscape);
+
+  // Therapist Vocal Effects & Piano Accompaniment
+  const [enableWarmth, setEnableWarmth] = useState<boolean>(true);
+  const [enableReverb, setEnableReverb] = useState<boolean>(true);
+  const [reverbLevel, setReverbLevel] = useState<number>(0.28);
+  const [enablePiano, setEnablePiano] = useState<boolean>(true);
+  const fallbackSpeechRef = useRef<{ cancel: () => void } | null>(null);
 
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [showBreathingCircle, setShowBreathingCircle] = useState<boolean>(true);
@@ -87,6 +98,13 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
       audioElementRef.current.volume = voiceVolume;
       audioElementRef.current.playbackRate = playbackRate;
 
+      // Attach acoustic effects chain (warmth low-shelf + sanctuary reverb)
+      soundscapeEngine.attachTherapistEffects(audioElementRef.current, {
+        enableWarmth,
+        enableReverb,
+        reverbAmount: reverbLevel,
+      });
+
       audioElementRef.current.onloadedmetadata = () => {
         if (audioElementRef.current && audioElementRef.current.duration > 0) {
           setDuration(audioElementRef.current.duration);
@@ -101,17 +119,26 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
 
     if (currentSoundscape !== 'none') {
       soundscapeEngine.play(currentSoundscape, ambientVolume);
+    } else if (enablePiano) {
+      setCurrentSoundscape('calm_piano');
+      soundscapeEngine.play('calm_piano', ambientVolume);
     }
 
     return () => {
       soundscapeEngine.stop();
+      therapistVoiceEngine.stop();
       if (audioElementRef.current) audioElementRef.current.pause();
+      if (fallbackSpeechRef.current) fallbackSpeechRef.current.cancel();
     };
   }, [isOpen, session.id]);
 
   useEffect(() => {
     soundscapeEngine.setVolume(ambientVolume);
   }, [ambientVolume]);
+
+  useEffect(() => {
+    soundscapeEngine.setVocalEffects(enableWarmth, enableReverb, reverbLevel);
+  }, [enableWarmth, enableReverb, reverbLevel]);
 
   useEffect(() => {
     if (audioElementRef.current) audioElementRef.current.volume = voiceVolume;
@@ -154,11 +181,29 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
         setCurrentTime(0);
         setIsCompleted(false);
       }
-      if (currentSoundscape !== 'none') soundscapeEngine.play(currentSoundscape, ambientVolume);
-      if (audioElementRef.current && session.audioBase64) audioElementRef.current.play().catch(console.warn);
+      if (currentSoundscape !== 'none') {
+        soundscapeEngine.play(currentSoundscape, ambientVolume);
+      } else if (enablePiano) {
+        setCurrentSoundscape('calm_piano');
+        soundscapeEngine.play('calm_piano', ambientVolume);
+      }
+
+      if (audioElementRef.current && session.audioBase64) {
+        soundscapeEngine.attachTherapistEffects(audioElementRef.current, {
+          enableWarmth,
+          enableReverb,
+          reverbAmount: reverbLevel,
+        });
+        audioElementRef.current.play().catch(console.warn);
+      } else if (!session.audioBase64 && !isRegeneratingAudio) {
+        // Automatically start therapist voiceover & piano!
+        handleGenerateVoiceover();
+      }
     } else {
       soundscapeEngine.stop();
+      therapistVoiceEngine.stop();
       if (audioElementRef.current) audioElementRef.current.pause();
+      if (fallbackSpeechRef.current) fallbackSpeechRef.current.cancel();
     }
   };
 
@@ -187,19 +232,29 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
   const handleGenerateVoiceover = async (targetVoice?: 'Kore' | 'Zephyr' | 'Fenrir' | 'Puck' | 'Charon') => {
     setIsRegeneratingAudio(true);
     const chosenVoice = targetVoice || voiceChoice;
+
+    // Start soothing calm piano accompaniment
+    if (enablePiano && (currentSoundscape === 'none' || currentSoundscape === 'calm_piano')) {
+      setCurrentSoundscape('calm_piano');
+      soundscapeEngine.play('calm_piano', ambientVolume);
+    }
+
     try {
+      const scriptText = session.fullScript || session.stages.map((s) => s.guidance).join(' <breath> ');
       const res = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          text: session.fullScript || session.stages.map((s) => s.guidance).join(' <breath> '),
+          text: scriptText,
           voiceName: chosenVoice,
-          style: session.audioStyle || 'Slow, deeply calming, warm meditation guide',
+          style: session.audioStyle || 'A warm, licensed clinical therapist speaking slowly and soothingly with comforting cadence, gentle breath pauses, and reassuring presence',
         }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'TTS failed');
+      if (!res.ok || !data.audioBase64) {
+        throw new Error(data.error || 'TTS generation unavailable');
+      }
 
       const updatedSession: MeditationSession = {
         ...session,
@@ -207,14 +262,44 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
         audioVoice: chosenVoice,
       };
 
-      if (audioElementRef.current) {
-        audioElementRef.current.src = `data:audio/wav;base64,${data.audioBase64}`;
-        if (isPlaying) audioElementRef.current.play();
+      if (!audioElementRef.current) {
+        audioElementRef.current = new Audio();
+      }
+      audioElementRef.current.src = `data:audio/wav;base64,${data.audioBase64}`;
+      audioElementRef.current.volume = voiceVolume;
+      audioElementRef.current.playbackRate = playbackRate;
+
+      // Attach therapist vocal effects (warmth + reverb)
+      soundscapeEngine.attachTherapistEffects(audioElementRef.current, {
+        enableWarmth,
+        enableReverb,
+        reverbAmount: reverbLevel,
+      });
+
+      if (isPlaying) {
+        audioElementRef.current.play().catch(console.warn);
       }
 
       if (onUpdateSession) onUpdateSession(updatedSession);
     } catch (err: any) {
-      console.error('TTS error:', err);
+      console.warn('TTS API notice, activating therapeutic voice synthesis fallback with piano:', err);
+      if (enablePiano && (currentSoundscape === 'none' || currentSoundscape === 'calm_piano')) {
+        setCurrentSoundscape('calm_piano');
+        soundscapeEngine.play('calm_piano', ambientVolume);
+      }
+      const scriptText = session.fullScript || session.stages.map((s) => s.guidance).join(' <breath> ');
+      therapistVoiceEngine.speak(scriptText, {
+        locale: currentLocale,
+        withPianoChords: enablePiano,
+        withStageChime: true,
+        onEnd: () => {
+          setIsPlaying(false);
+          setIsCompleted(true);
+        },
+        onStart: () => {
+          setIsPlaying(true);
+        },
+      });
     } finally {
       setIsRegeneratingAudio(false);
     }
@@ -264,18 +349,18 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
     >
       {/* Background Visualizer with Subtle Ken Burns Zoom */}
       <div className="absolute inset-0 overflow-hidden">
-        {session.imageUrl ? (
-          <img
-            src={session.imageUrl}
-            alt={session.title}
-            referrerPolicy="no-referrer"
-            className={`w-full h-full object-cover transition-transform duration-[30000ms] ease-out ${
-              isPlaying ? 'scale-110 filter brightness-75' : 'scale-100 filter brightness-65'
-            }`}
-          />
-        ) : (
-          <div className="w-full h-full bg-[#123F40]" />
-        )}
+        <img
+          src={resolveSessionImageUrl(session.imageUrl, `${session.title} ${session.theme}`)}
+          alt={session.title}
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = resolveSessionImageUrl(undefined, `${session.title} ${session.theme}`);
+          }}
+          className={`w-full h-full object-cover transition-transform duration-[30000ms] ease-out ${
+            isPlaying ? 'scale-110 filter brightness-75' : 'scale-100 filter brightness-65'
+          }`}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-[#053333] via-black/40 to-[#053333]/80" />
       </div>
 
@@ -397,15 +482,27 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
         </div>
 
         {!session.audioBase64 && (
-          <div className="flex items-center gap-3 p-3.5 rounded-full bg-[#123F40]/90 border border-white/20 text-xs text-white">
-            <Sparkles className="size-4 text-[#DAE7DE] shrink-0" />
-            <span>Voiceover ready via Gemini 3.8 Flash TTS.</span>
+          <div className="flex flex-col sm:flex-row items-center gap-3 p-3.5 px-5 rounded-2xl bg-[#123F40]/90 backdrop-blur-md border border-white/20 text-xs text-white shadow-xl">
+            <div className="flex items-center gap-2 text-center sm:text-start">
+              <Sparkles className="size-4 text-[#F1E8D7] shrink-0 animate-pulse" />
+              <span>Therapist voiceover with acoustic reverb & felt piano</span>
+            </div>
             <button
               onClick={() => handleGenerateVoiceover()}
               disabled={isRegeneratingAudio}
-              className="min-h-9 px-4 rounded-full bg-[#F1E8D7] hover:bg-white text-[#123F40] font-semibold text-xs transition-colors shrink-0"
+              className="min-h-9 px-4 rounded-full bg-[#F1E8D7] hover:bg-white text-[#123F40] font-semibold text-xs transition-colors shrink-0 shadow-sm flex items-center gap-2"
             >
-              {isRegeneratingAudio ? '...' : 'Synthesize Audio'}
+              {isRegeneratingAudio ? (
+                <>
+                  <div className="size-3.5 border-2 border-[#123F40] border-t-transparent rounded-full animate-spin" />
+                  <span>Synthesizing Voice...</span>
+                </>
+              ) : (
+                <>
+                  <Music className="size-3.5" />
+                  <span>Generate Audio & Piano</span>
+                </>
+              )}
             </button>
           </div>
         )}
@@ -451,7 +548,7 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
 
       {/* Sanctuary Mixer Drawer */}
       {showMixerDrawer && (
-        <div className="absolute bottom-24 end-6 z-30 w-80 p-6 rounded-2xl bg-[#123F40]/95 backdrop-blur-xl border border-white/20 shadow-2xl text-white space-y-4 text-xs">
+        <div className="absolute bottom-24 end-6 z-30 w-80 p-6 rounded-2xl bg-[#123F40]/95 backdrop-blur-xl border border-white/20 shadow-2xl text-white space-y-4 text-xs max-h-[80vh] overflow-y-auto">
           <div className="flex items-center justify-between pb-2 border-b border-white/15">
             <span className="font-mono text-xs uppercase tracking-wider text-[#DAE7DE] font-semibold">
               {t.soundscapeMixer}
@@ -459,6 +556,59 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
             <button onClick={() => setShowMixerDrawer(false)} className="text-white/60 hover:text-white">
               <X className="size-4" />
             </button>
+          </div>
+
+          {/* Therapist Voice FX Chain */}
+          <div className="space-y-2 p-3 rounded-xl bg-black/25 border border-white/10">
+            <div className="flex items-center justify-between text-[#F1E8D7] font-semibold">
+              <span className="flex items-center gap-1.5 font-mono text-[11px]">
+                <Radio className="size-3.5" /> Therapist Vocal FX
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5 pt-1">
+              <button
+                type="button"
+                onClick={() => setEnableWarmth(!enableWarmth)}
+                className={`py-1.5 px-2 rounded-lg border text-center transition-colors ${
+                  enableWarmth
+                    ? 'bg-[#175C62] border-[#DAE7DE]/50 text-white font-medium'
+                    : 'border-white/15 text-white/60'
+                }`}
+              >
+                Warmth EQ (+3dB)
+              </button>
+              <button
+                type="button"
+                onClick={() => setEnableReverb(!enableReverb)}
+                className={`py-1.5 px-2 rounded-lg border text-center transition-colors ${
+                  enableReverb
+                    ? 'bg-[#175C62] border-[#DAE7DE]/50 text-white font-medium'
+                    : 'border-white/15 text-white/60'
+                }`}
+              >
+                Sanctuary Reverb
+              </button>
+            </div>
+            <div className="pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const nextPiano = !enablePiano;
+                  setEnablePiano(nextPiano);
+                  if (nextPiano && currentSoundscape === 'none') {
+                    setCurrentSoundscape('calm_piano');
+                    if (isPlaying) soundscapeEngine.play('calm_piano', ambientVolume);
+                  }
+                }}
+                className={`w-full py-1.5 px-2.5 rounded-lg border text-center transition-colors flex items-center justify-center gap-1.5 ${
+                  enablePiano
+                    ? 'bg-[#F1E8D7] text-[#123F40] font-semibold border-white'
+                    : 'border-white/15 text-white/60'
+                }`}
+              >
+                <Music className="size-3" /> Felt Piano Accompaniment
+              </button>
+            </div>
           </div>
 
           <div className="space-y-1">
@@ -497,11 +647,12 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
             <span className="text-[#DAE7DE] block font-mono text-[10px]">{t.ambientTrack}</span>
             <div className="grid grid-cols-2 gap-1.5">
               {[
-                { id: 'tibetan_bowls', name: 'Bowls' },
-                { id: 'ocean_waves', name: 'Surf' },
-                { id: 'forest_rain', name: 'Rain' },
-                { id: 'binaural_theta', name: 'Theta' },
-                { id: 'zen_windchimes', name: 'Chimes' },
+                { id: 'calm_piano', name: '🎹 Felt Piano' },
+                { id: 'tibetan_bowls', name: 'Tibetan Bowls' },
+                { id: 'ocean_waves', name: 'Ocean Waves' },
+                { id: 'forest_rain', name: 'Forest Rain' },
+                { id: 'binaural_theta', name: 'Binaural Theta' },
+                { id: 'zen_windchimes', name: 'Windchimes' },
                 { id: 'none', name: 'Mute' },
               ].map((s) => (
                 <button
@@ -520,7 +671,7 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
           </div>
 
           <div className="pt-2 border-t border-white/15 space-y-1.5">
-            <span className="text-[#DAE7DE] block font-mono text-[10px]">Gemini 3.8 TTS Voice:</span>
+            <span className="text-[#DAE7DE] block font-mono text-[10px]">Therapist Voice (Gemini TTS):</span>
             <div className="grid grid-cols-5 gap-1">
               {(['Kore', 'Zephyr', 'Fenrir', 'Puck', 'Charon'] as const).map((v) => (
                 <button

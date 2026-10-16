@@ -123,6 +123,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
+          {/* AI Intelligence status pill */}
+          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#DAE7DE]/50 border border-[#BCD0C8]/60 text-[11px] font-mono text-[#175C62]">
+            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Gemini & Grok AI</span>
+          </div>
+
           {/* Primary Pill CTA Button (MindRested primary-6000 with 44px min touch target) */}
           <button
             onClick={onOpenChat}

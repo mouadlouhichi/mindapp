@@ -67,6 +67,7 @@ export const CustomSessionCreator: React.FC<CustomSessionCreatorProps> = ({
 }) => {
   const [topic, setTopic] = useState(initialTopic || 'Anxiety & Nervous System Release');
   const [durationMinutes, setDurationMinutes] = useState<number>(5);
+  const [aiProvider, setAiProvider] = useState<'gemini' | 'grok'>('gemini');
   const [selectedSettingIndex, setSelectedSettingIndex] = useState(0);
   const [selectedVoice, setSelectedVoice] = useState<'Kore' | 'Zephyr' | 'Fenrir' | 'Puck' | 'Charon'>('Kore');
   const [voiceStyle, setVoiceStyle] = useState('Slow, warm, deeply peaceful meditation guide with gentle pauses');
@@ -94,13 +95,15 @@ export const CustomSessionCreator: React.FC<CustomSessionCreatorProps> = ({
     const chosenSetting = SETTINGS[selectedSettingIndex];
 
     try {
-      // 1. Script Generation
+      // 1. Script Generation (via Gemini or Grok)
       const scriptRes = await fetch('/api/generate-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           topic,
           durationMinutes,
+          aiProvider,
+          useGrok: aiProvider === 'grok',
           mood: 'Tranquil & Grounded',
           setting: chosenSetting.label,
           guideStyle: `${selectedVoice} - ${voiceStyle}`,
@@ -253,6 +256,44 @@ export const CustomSessionCreator: React.FC<CustomSessionCreatorProps> = ({
                   {th}
                 </button>
               ))}
+            </div>
+
+            {/* AI Engine Choice (Gemini vs Grok) */}
+            <div className="pt-2 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-[#053333] block">
+                  AI Wisdom Engine
+                </span>
+                <span className="text-[10px] font-mono text-[#175C62]">
+                  {aiProvider === 'gemini' ? 'Google Gemini 3.8' : 'xAI Grok-2 Mindful'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 p-1 bg-[#DAE7DE]/40 rounded-full border border-[#BCD0C8]/80">
+                <button
+                  type="button"
+                  onClick={() => setAiProvider('gemini')}
+                  className={`py-1.5 px-3 text-xs rounded-full transition-colors font-medium flex items-center justify-center gap-1.5 ${
+                    aiProvider === 'gemini'
+                      ? 'bg-[#175C62] text-white shadow-xs'
+                      : 'text-[#1A2F32]/80 hover:text-[#053333]'
+                  }`}
+                >
+                  <Sparkles className="size-3.5" />
+                  <span>Gemini 3.8 Flash</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAiProvider('grok')}
+                  className={`py-1.5 px-3 text-xs rounded-full transition-colors font-medium flex items-center justify-center gap-1.5 ${
+                    aiProvider === 'grok'
+                      ? 'bg-purple-800 text-white shadow-xs'
+                      : 'text-[#1A2F32]/80 hover:text-[#053333]'
+                  }`}
+                >
+                  <span>🌌</span>
+                  <span>Grok-2 (xAI)</span>
+                </button>
+              </div>
             </div>
 
             {/* Duration Segmented Pills */}
