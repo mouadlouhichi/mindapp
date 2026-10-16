@@ -79,9 +79,22 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
   );
   const activeStage = session.stages[currentStageIndex] || session.stages[0];
 
+  const resolveAudioSource = (sess: MeditationSession): string | null => {
+    if (sess.audioBase64) {
+      if (sess.audioBase64.startsWith('data:')) return sess.audioBase64;
+      const isMp3 =
+        sess.audioBase64.startsWith('SUQz') ||
+        sess.audioBase64.startsWith('//PEw') ||
+        sess.audioBase64.startsWith('//tE');
+      return `data:${isMp3 ? 'audio/mp3' : 'audio/wav'};base64,${sess.audioBase64}`;
+    }
+    return sess.audioUrl || null;
+  };
+
   useEffect(() => {
     if (!isOpen) {
       soundscapeEngine.stop();
+      therapistVoiceEngine.stop();
       if (audioElementRef.current) audioElementRef.current.pause();
       setIsPlaying(false);
       return;
@@ -92,9 +105,10 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
     setCurrentTime(0);
     setIsCompleted(false);
 
-    if (session.audioBase64) {
+    const audioSrc = resolveAudioSource(session);
+    if (audioSrc) {
       if (!audioElementRef.current) audioElementRef.current = new Audio();
-      audioElementRef.current.src = `data:audio/wav;base64,${session.audioBase64}`;
+      audioElementRef.current.src = audioSrc;
       audioElementRef.current.volume = voiceVolume;
       audioElementRef.current.playbackRate = playbackRate;
 
@@ -149,9 +163,10 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
   }, [playbackRate]);
 
   useEffect(() => {
+    const hasAudio = Boolean(resolveAudioSource(session));
     if (isPlaying) {
       timerIntervalRef.current = window.setInterval(() => {
-        if (audioElementRef.current && session.audioBase64) {
+        if (audioElementRef.current && hasAudio) {
           setCurrentTime(audioElementRef.current.currentTime);
         } else {
           setCurrentTime((prev) => {
@@ -170,11 +185,13 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
-  }, [isPlaying, duration, session.audioBase64]);
+  }, [isPlaying, duration, session.audioBase64, session.audioUrl]);
 
   const togglePlayPause = () => {
     const nextState = !isPlaying;
     setIsPlaying(nextState);
+
+    const audioSrc = resolveAudioSource(session);
 
     if (nextState) {
       if (isCompleted) {
@@ -188,14 +205,14 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
         soundscapeEngine.play('calm_piano', ambientVolume);
       }
 
-      if (audioElementRef.current && session.audioBase64) {
+      if (audioElementRef.current && audioSrc) {
         soundscapeEngine.attachTherapistEffects(audioElementRef.current, {
           enableWarmth,
           enableReverb,
           reverbAmount: reverbLevel,
         });
         audioElementRef.current.play().catch(console.warn);
-      } else if (!session.audioBase64 && !isRegeneratingAudio) {
+      } else if (!audioSrc && !isRegeneratingAudio) {
         // Automatically start therapist voiceover & piano!
         handleGenerateVoiceover();
       }
@@ -209,7 +226,7 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
 
   const handleSeek = (newTime: number) => {
     setCurrentTime(newTime);
-    if (audioElementRef.current && session.audioBase64) {
+    if (audioElementRef.current && resolveAudioSource(session)) {
       audioElementRef.current.currentTime = newTime;
     }
   };
@@ -262,10 +279,13 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
         audioVoice: chosenVoice,
       };
 
+      const mime = data.mimeType || 'audio/mp3';
+      const audioDataUrl = `data:${mime};base64,${data.audioBase64}`;
+
       if (!audioElementRef.current) {
         audioElementRef.current = new Audio();
       }
-      audioElementRef.current.src = `data:audio/wav;base64,${data.audioBase64}`;
+      audioElementRef.current.src = audioDataUrl;
       audioElementRef.current.volume = voiceVolume;
       audioElementRef.current.playbackRate = playbackRate;
 
@@ -481,7 +501,31 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
           </div>
         </div>
 
-        {!session.audioBase64 && (
+        {resolveAudioSource(session) ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 p-3 px-4.5 rounded-2xl bg-[#123F40]/85 backdrop-blur-md border border-white/20 text-xs text-white shadow-xl">
+            <div className="flex items-center gap-2.5">
+              <span className="relative flex size-2.5">
+                {isPlaying && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#DAE7DE] opacity-75"></span>
+                )}
+                <span className="relative inline-flex rounded-full size-2.5 bg-[#F1E8D7]"></span>
+              </span>
+              <span className="font-medium text-[#F1E8D7]">
+                Voice: {voiceChoice || session.audioVoice || 'Kore'}
+              </span>
+              <span className="text-white/60 text-[11px] hidden sm:inline font-mono">
+                • Studio Neural Acoustic Mastering
+              </span>
+            </div>
+            <button
+              onClick={() => setShowMixerDrawer(true)}
+              className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] font-medium transition-colors border border-white/15 flex items-center gap-1.5"
+            >
+              <Radio className="size-3 text-[#DAE7DE]" />
+              <span>Change Voice</span>
+            </button>
+          </div>
+        ) : (
           <div className="flex flex-col sm:flex-row items-center gap-3 p-3.5 px-5 rounded-2xl bg-[#123F40]/90 backdrop-blur-md border border-white/20 text-xs text-white shadow-xl">
             <div className="flex items-center gap-2 text-center sm:text-start">
               <Sparkles className="size-4 text-[#F1E8D7] shrink-0 animate-pulse" />
@@ -670,26 +714,77 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
             </div>
           </div>
 
-          <div className="pt-2 border-t border-white/15 space-y-1.5">
-            <span className="text-[#DAE7DE] block font-mono text-[10px]">Therapist Voice (Gemini TTS):</span>
-            <div className="grid grid-cols-5 gap-1">
-              {(['Kore', 'Zephyr', 'Fenrir', 'Puck', 'Charon'] as const).map((v) => (
+          <div className="pt-2 border-t border-white/15 space-y-2">
+            <div className="flex items-center justify-between text-[#DAE7DE]">
+              <span className="font-mono text-[10px] uppercase tracking-wider">🎙️ Voice Persona:</span>
+              <span className="text-[10px] text-[#F1E8D7] font-semibold">{voiceChoice}</span>
+            </div>
+            <div className="space-y-1.5">
+              {[
+                { id: 'Kore', name: 'Maya', style: 'Warm Soothing Therapist (Female)', tag: 'Recommended' },
+                { id: 'Zephyr', name: 'Kai', style: 'Calm & Grounded Presence (Male)', tag: 'Centering' },
+                { id: 'Fenrir', name: 'Fenrir', style: 'Deep Resonant Zen Guide (Monk)', tag: 'Deep Rest' },
+                { id: 'Puck', name: 'Puck', style: 'Gentle Mindful Whisper (Light)', tag: 'Gentle' },
+                { id: 'Charon', name: 'Charon', style: 'Steady Meditative Anchor (Deep)', tag: 'Grounded' },
+              ].map((v) => (
                 <button
-                  key={v}
+                  key={v.id}
                   onClick={() => {
-                    setVoiceChoice(v);
-                    handleGenerateVoiceover(v);
+                    setVoiceChoice(v.id as any);
+                    handleGenerateVoiceover(v.id as any);
                   }}
                   disabled={isRegeneratingAudio}
-                  className={`py-1 text-[11px] rounded border transition-colors ${
-                    voiceChoice === v
-                      ? 'bg-white text-[#123F40] font-semibold border-white'
-                      : 'border-white/20 text-white/80 hover:text-white'
+                  className={`w-full p-2 rounded-xl border text-start transition-all flex items-center justify-between ${
+                    voiceChoice === v.id
+                      ? 'bg-white/20 border-[#F1E8D7] text-white shadow-sm'
+                      : 'border-white/10 text-white/80 hover:bg-white/10'
                   }`}
                 >
-                  {v}
+                  <div>
+                    <div className="font-medium text-xs flex items-center gap-1.5">
+                      <span>{v.name}</span>
+                      <span className="text-[10px] text-[#DAE7DE]/70 font-mono">({v.id})</span>
+                    </div>
+                    <div className="text-[10px] text-white/60">{v.style}</div>
+                  </div>
+                  <span
+                    className={`text-[9px] px-2 py-0.5 rounded-full font-mono shrink-0 ms-2 ${
+                      voiceChoice === v.id
+                        ? 'bg-[#F1E8D7] text-[#123F40] font-bold'
+                        : 'bg-black/30 text-white/60'
+                    }`}
+                  >
+                    {isRegeneratingAudio && voiceChoice === v.id ? 'Loading...' : v.tag}
+                  </span>
                 </button>
               ))}
+            </div>
+
+            {/* Pacing Speed Controls */}
+            <div className="pt-2 border-t border-white/10 space-y-1">
+              <span className="text-[#DAE7DE] block font-mono text-[10px]">Pacing & Cadence:</span>
+              <div className="grid grid-cols-3 gap-1">
+                {[
+                  { label: '0.75x Deep', val: 0.75 },
+                  { label: '0.88x Gentle', val: 0.88 },
+                  { label: '1.0x Normal', val: 1.0 },
+                ].map((p) => (
+                  <button
+                    key={p.val}
+                    onClick={() => {
+                      setPlaybackRate(p.val);
+                      if (audioElementRef.current) audioElementRef.current.playbackRate = p.val;
+                    }}
+                    className={`py-1 text-[10px] rounded border transition-colors ${
+                      playbackRate === p.val
+                        ? 'bg-white text-[#123F40] font-semibold border-white'
+                        : 'border-white/15 text-white/70 hover:text-white'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

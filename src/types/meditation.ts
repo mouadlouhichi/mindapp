@@ -28,6 +28,7 @@ export interface MeditationSession {
   imageUrl?: string;
   imageSize?: '1K' | '2K' | '4K';
   imageAspectRatio?: string;
+  audioUrl?: string;
   audioBase64?: string;
   audioVoice?: 'Kore' | 'Zephyr' | 'Fenrir' | 'Puck' | 'Charon';
   audioStyle?: string;

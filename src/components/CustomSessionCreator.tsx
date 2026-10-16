@@ -41,11 +41,11 @@ const SETTINGS = [
 ];
 
 const VOICES = [
-  { id: 'Kore', name: 'Kore', character: 'Serene & compassionate tone' },
-  { id: 'Zephyr', name: 'Zephyr', character: 'Warm, grounded, reassuring cadence' },
-  { id: 'Fenrir', name: 'Fenrir', character: 'Deep, resonant, authoritative presence' },
-  { id: 'Puck', name: 'Puck', character: 'Light, friendly, uplifting cadence' },
-  { id: 'Charon', name: 'Charon', character: 'Slow, contemplative, ethereal presence' },
+  { id: 'Kore', name: 'Maya (Kore)', character: 'Warm soothing therapist • Soft compassionate tone', tag: 'Recommended' },
+  { id: 'Zephyr', name: 'Kai (Zephyr)', character: 'Calm grounded guide • Reassuring presence', tag: 'Centering' },
+  { id: 'Fenrir', name: 'Fenrir', character: 'Deep resonant monk • Grounded bass cadence', tag: 'Deep Rest' },
+  { id: 'Puck', name: 'Puck', character: 'Light serene guide • Gentle mindful whisper', tag: 'Gentle' },
+  { id: 'Charon', name: 'Charon', character: 'Steady meditative anchor • Contemplative pace', tag: 'Stillness' },
 ];
 
 const SOUNDSCAPES: { id: SoundscapeType; name: string; desc: string }[] = [
