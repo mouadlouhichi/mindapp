@@ -514,7 +514,7 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
                 Voice: {voiceChoice || session.audioVoice || 'Kore'}
               </span>
               <span className="text-white/60 text-[11px] hidden sm:inline font-mono">
-                • Studio Neural Acoustic Mastering
+                • Authentic Human Meditation Voiceover & Sanctuary Soundscape
               </span>
             </div>
             <button
@@ -522,7 +522,7 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
               className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] font-medium transition-colors border border-white/15 flex items-center gap-1.5"
             >
               <Radio className="size-3 text-[#DAE7DE]" />
-              <span>Change Voice</span>
+              <span>Voice & Effects</span>
             </button>
           </div>
         ) : (
