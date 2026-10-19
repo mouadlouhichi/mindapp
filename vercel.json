@@ -6,7 +6,7 @@
       "destination": "/images/:file*"
     },
     {
-      "source": "/((?!assets|images|favicon.ico|.*\\..*).*)",
+      "source": "/((?!api|assets|images|audio|public|favicon.ico|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]

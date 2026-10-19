@@ -7,6 +7,7 @@ interface BreathingVisualizerProps {
   pattern?: BreathingPattern;
   onPhaseChange?: (phase: 'inhale' | 'hold' | 'exhale' | 'pause') => void;
   compact?: boolean;
+  mode?: 'full' | 'orb-only' | 'compact';
   currentLocale?: Locale;
   theme?: 'light' | 'dark';
 }
@@ -50,6 +51,7 @@ export const BreathingVisualizer: React.FC<BreathingVisualizerProps> = ({
   pattern: initialPattern,
   onPhaseChange,
   compact = false,
+  mode,
   currentLocale = 'en',
   theme = 'light',
 }) => {
@@ -145,7 +147,9 @@ export const BreathingVisualizer: React.FC<BreathingVisualizerProps> = ({
     }
   };
 
-  if (compact) {
+  const isDark = theme === 'dark';
+
+  if (compact || mode === 'compact') {
     return (
       <div className={`flex items-center gap-3 px-4 py-2 rounded-full shadow-md border ${
         theme === 'dark'
@@ -164,7 +168,39 @@ export const BreathingVisualizer: React.FC<BreathingVisualizerProps> = ({
     );
   }
 
-  const isDark = theme === 'dark';
+  if (mode === 'orb-only') {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-1.5 py-1 select-none">
+        {/* MindRested Concentric Breathing Mandala */}
+        <div className={`relative flex items-center justify-center ${isDark ? 'size-28 sm:size-32 my-0.5' : 'size-36 sm:size-44 my-2'}`}>
+          <div className={`absolute inset-0 rounded-full border ${isDark ? 'border-white/15' : 'border-[#175C62]/15'}`} />
+          <div className={`absolute inset-2 sm:inset-3 rounded-full border ${isDark ? 'border-white/10' : 'border-[#175C62]/20'}`} />
+          <div className={`absolute inset-4 sm:inset-5 rounded-full border ${isDark ? 'border-white/5' : 'border-[#175C62]/10'}`} />
+
+          <div
+            className={`relative z-10 rounded-full flex flex-col items-center justify-center p-2 text-white shadow-xl ${
+              isDark
+                ? 'size-18 sm:size-20 bg-gradient-to-tr from-[#175C62] via-[#2E6C72] to-[#DAE7DE]/30 border border-white/20'
+                : 'size-22 sm:size-26 bg-gradient-to-tr from-[#123F40] via-[#175C62] to-[#2E6C72]'
+            } ${getScaleClass()}`}
+          >
+            <span className={`font-serif tabular-nums drop-shadow font-semibold ${isDark ? 'text-base sm:text-lg' : 'text-xl sm:text-2xl'}`}>
+              {secondsLeft}s
+            </span>
+            <span className="text-[9px] font-mono uppercase tracking-widest text-[#DAE7DE]">
+              {phase}
+            </span>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <p className={`font-display font-semibold rtl:font-sans ${isDark ? 'text-xs sm:text-sm text-[#F1E8D7]' : 'text-sm text-[#053333]'}`}>
+            {getPhaseInstruction()}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex flex-col items-center justify-center rounded-[2rem] w-full mx-auto transition-all ${

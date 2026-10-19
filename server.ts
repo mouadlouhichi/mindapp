@@ -51,7 +51,9 @@ async function callGrokChat({
   const endpoint = isGroq
     ? 'https://api.groq.com/openai/v1/chat/completions'
     : 'https://api.x.ai/v1/chat/completions';
-  const effectiveModel = model || (isGroq ? 'qwen/qwen3.8-27b' : 'grok-2-latest');
+  const effectiveModel = isGroq
+    ? (model && !model.toLowerCase().includes('grok') ? model : 'qwen/qwen3.8-27b')
+    : (model || 'grok-2-latest');
 
   const formattedMessages: Array<{ role: string; content: string }> = [];
   if (systemInstruction) {
@@ -579,16 +581,19 @@ Respond ONLY with valid JSON. Do not wrap in markdown or backticks.`;
 
     const grokKeyToUse = req.body?.grokApiKey || (req.headers['x-grok-api-key'] as string) || GROK_API_KEY;
     if ((req.body.useGrok || req.body.aiProvider === 'grok') && grokKeyToUse) {
-      const grokRes = await callGrokChat({
-        messages: [{ role: 'user', content: prompt }],
-        systemInstruction: 'You are a contemplative meditation teacher. Return valid JSON only, without markdown fences.',
-        model: 'grok-2-latest',
-        temperature: 0.7,
-        apiKey: grokKeyToUse,
-      });
-      let cleaned = grokRes.reply.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-      const parsed = JSON.parse(cleaned);
-      return res.json({ ...parsed, modelUsed: 'grok-2-latest' });
+      try {
+        const grokRes = await callGrokChat({
+          messages: [{ role: 'user', content: prompt }],
+          systemInstruction: 'You are a contemplative meditation teacher. Return valid JSON only, without markdown fences.',
+          temperature: 0.7,
+          apiKey: grokKeyToUse,
+        });
+        let cleaned = grokRes.reply.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+        const parsed = JSON.parse(cleaned);
+        return res.json({ ...parsed, modelUsed: grokRes.modelUsed });
+      } catch (grokErr: any) {
+        console.warn('Grok generation error, proceeding to Gemini/fallback:', grokErr?.message);
+      }
     }
 
     const response = await ai.models.generateContent({

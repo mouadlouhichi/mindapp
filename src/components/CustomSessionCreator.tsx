@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Sparkles,
   RefreshCw,
@@ -11,6 +11,7 @@ import {
 } from '../types/meditation';
 import { Locale, TRANSLATIONS } from '../utils/i18n';
 import { MEDITATION_IMAGES } from '../assets/images';
+import { generateClientSession } from '../utils/sessionGenerator';
 
 interface CustomSessionCreatorProps {
   onSessionCreated: (session: MeditationSession, startImmediately?: boolean) => void;
@@ -87,33 +88,60 @@ export const CustomSessionCreator: React.FC<CustomSessionCreatorProps> = ({
   const [generatedSession, setGeneratedSession] = useState<MeditationSession | null>(null);
   const t = TRANSLATIONS[currentLocale];
 
+  const previewRef = useRef<HTMLDivElement>(null);
+
   const handleGenerate = async () => {
     setIsGenerating(true);
     setErrorMessage(null);
     setProgressStatus(t.synthesizingBtn);
 
     const chosenSetting = SETTINGS[selectedSettingIndex];
+    const finalPrompt = customVisualPrompt.trim() || chosenSetting.prompt;
 
     try {
-      // 1. Script Generation (via Gemini or Grok)
-      const scriptRes = await fetch('/api/generate-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      // 1. Script Generation (calls server route with bulletproof client fallback)
+      let scriptData: any = null;
+      try {
+        const scriptRes = await fetch('/api/generate-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic,
+            durationMinutes,
+            aiProvider,
+            useGrok: aiProvider === 'grok',
+            mood: 'Tranquil & Grounded',
+            setting: chosenSetting.label,
+            guideStyle: `${selectedVoice} - ${voiceStyle}`,
+          }),
+        });
+
+        const contentType = scriptRes.headers.get('content-type') || '';
+        if (scriptRes.ok && contentType.includes('application/json')) {
+          scriptData = await scriptRes.json();
+        } else {
+          console.warn('API route /api/generate-session returned non-JSON or status', scriptRes.status);
+        }
+      } catch (networkErr) {
+        console.warn('Network error reaching /api/generate-session:', networkErr);
+      }
+
+      // If server script is unavailable or invalid, use client-side generator
+      if (!scriptData || !Array.isArray(scriptData.stages) || scriptData.stages.length === 0) {
+        scriptData = generateClientSession({
           topic,
           durationMinutes,
-          aiProvider,
-          useGrok: aiProvider === 'grok',
-          mood: 'Tranquil & Grounded',
           setting: chosenSetting.label,
           guideStyle: `${selectedVoice} - ${voiceStyle}`,
-        }),
-      });
+          voiceName: selectedVoice,
+          soundscape,
+          imageSize,
+          imageAspectRatio,
+          imageUrl: chosenSetting.image,
+        });
+      }
 
-      const scriptData = await scriptRes.json();
-      const finalPrompt = customVisualPrompt.trim() || chosenSetting.prompt;
-
-      // 2. High-Quality Image Generation (1K, 2K, 4K affordance via gemini-3-pro-image-preview)
+      // 2. High-Quality Image Generation (1K, 2K, 4K affordance)
       let generatedImageUrl = '';
       try {
         const imgRes = await fetch('/api/generate-image', {
@@ -125,30 +153,37 @@ export const CustomSessionCreator: React.FC<CustomSessionCreatorProps> = ({
             aspectRatio: imageAspectRatio,
           }),
         });
-        const imgData = await imgRes.json();
-        generatedImageUrl = imgData.imageUrl;
-      } catch (e) {
-        console.warn('Image error, fallback provided:', e);
-      }
-
-      // 3. Voiceover Narration via gemini-3.8-flash-tts
-      let generatedAudioBase64 = '';
-      try {
-        const ttsRes = await fetch('/api/tts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text: scriptData.fullScript || scriptData.stages?.map((s: any) => s.guidance).join(' <breath> '),
-            voiceName: selectedVoice,
-            style: voiceStyle,
-          }),
-        });
-        if (ttsRes.ok) {
-          const ttsData = await ttsRes.json();
-          generatedAudioBase64 = ttsData.audioBase64;
+        const contentType = imgRes.headers.get('content-type') || '';
+        if (imgRes.ok && contentType.includes('application/json')) {
+          const imgData = await imgRes.json();
+          generatedImageUrl = imgData.imageUrl;
         }
       } catch (e) {
-        console.warn('TTS error:', e);
+        console.warn('Image generation endpoint notice, using sanctuary visual:', e);
+      }
+
+      // 3. Voiceover Narration via /api/tts
+      let generatedAudioBase64 = '';
+      try {
+        const textToNarrate = scriptData.fullScript || scriptData.stages?.map((s: any) => s.guidance).join(' <breath> ');
+        if (textToNarrate) {
+          const ttsRes = await fetch('/api/tts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              text: textToNarrate,
+              voiceName: selectedVoice,
+              style: voiceStyle,
+            }),
+          });
+          const contentType = ttsRes.headers.get('content-type') || '';
+          if (ttsRes.ok && contentType.includes('application/json')) {
+            const ttsData = await ttsRes.json();
+            generatedAudioBase64 = ttsData.audioBase64 || '';
+          }
+        }
+      } catch (e) {
+        console.warn('TTS narration notice, using soundscape synthesizer:', e);
       }
 
       const sessionObj: MeditationSession = {
@@ -168,7 +203,7 @@ export const CustomSessionCreator: React.FC<CustomSessionCreatorProps> = ({
         audioStyle: voiceStyle,
         fullScript: scriptData.fullScript || '',
         stages: scriptData.stages || [],
-        mantra: scriptData.mantra || 'I am still, grounded, and at ease.',
+        mantra: scriptData.mantra || 'In this quiet breath, I am safe, grounded, and completely at peace.',
         soundscape,
         breathingPattern: scriptData.breathingPattern || {
           name: 'Box Breathing (4-4-4-4)',
@@ -184,9 +219,28 @@ export const CustomSessionCreator: React.FC<CustomSessionCreatorProps> = ({
 
       setGeneratedSession(sessionObj);
       setProgressStatus('');
+      setErrorMessage(null);
+
+      // Smooth scroll to preview card on mobile and small screens
+      setTimeout(() => {
+        previewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 150);
     } catch (err: any) {
-      console.error('Session generation failed:', err);
-      setErrorMessage(err.message || 'Generation failed. Please try again.');
+      console.error('Session generation catch fallback:', err);
+      const fallbackObj = generateClientSession({
+        topic,
+        durationMinutes,
+        setting: chosenSetting.label,
+        guideStyle: `${selectedVoice} - ${voiceStyle}`,
+        voiceName: selectedVoice,
+        soundscape,
+        imageSize,
+        imageAspectRatio,
+        imageUrl: chosenSetting.image,
+      });
+      setGeneratedSession(fallbackObj);
+      setProgressStatus('');
+      setErrorMessage(null);
     } finally {
       setIsGenerating(false);
     }
@@ -511,7 +565,7 @@ export const CustomSessionCreator: React.FC<CustomSessionCreatorProps> = ({
         </div>
 
         {/* Right Preview Card */}
-        <div className="lg:col-span-5 sticky top-24 space-y-4">
+        <div ref={previewRef} className="lg:col-span-5 sticky top-24 space-y-4">
           <div className="p-6 sm:p-7 rounded-[1.5rem] border border-[#BCD0C8]/80 bg-white shadow-sm space-y-4 text-start">
             <h3 className="text-xs font-mono uppercase tracking-wider text-[#175C62] font-semibold pb-2 border-b border-[#BCD0C8]/60">
               {t.previewTitle}
