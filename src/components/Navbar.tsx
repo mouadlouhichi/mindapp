@@ -28,24 +28,24 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-[#175C62]/15 bg-[#FCFCF8]/95 backdrop-blur-md transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between gap-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 h-16 sm:h-18 flex items-center justify-between gap-2 sm:gap-6">
         {/* Zone 1: MindRested Brand Wordmark & Organic Heart Emblem */}
         <button
           onClick={() => setActiveTab('library')}
-          className="flex items-center gap-3 text-start shrink-0 group focus:outline-none"
+          className="flex items-center gap-2 sm:gap-3 text-start shrink-0 group focus:outline-none"
         >
           {/* MindRested Signature Heart Icon Badge */}
-          <div className="grid size-10 shrink-0 place-items-center rounded-[14px] bg-[#175C62] text-white shadow-sm ring-1 ring-inset ring-[#175C62]/20 group-hover:bg-[#123F40] transition-colors">
-            <Heart className="size-5 stroke-[2] fill-white/20" />
+          <div className="grid size-9 sm:size-10 shrink-0 place-items-center rounded-[12px] sm:rounded-[14px] bg-[#175C62] text-white shadow-sm ring-1 ring-inset ring-[#175C62]/20 group-hover:bg-[#123F40] transition-colors">
+            <Heart className="size-4 sm:size-5 stroke-[2] fill-white/20" />
           </div>
 
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="font-display text-xl font-bold tracking-tight text-[#053333] group-hover:text-[#175C62] transition-colors">
+              <span className="font-display text-lg sm:text-xl font-bold tracking-tight text-[#053333] group-hover:text-[#175C62] transition-colors">
                 {t.brandName}
               </span>
             </div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#175C62]/80 font-mono">
+            <p className="hidden sm:block text-[10px] font-semibold uppercase tracking-[0.12em] text-[#175C62]/80 font-mono">
               {t.brandTagline}
             </p>
           </div>
@@ -86,12 +86,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Zone 3: Language Selector + Primary Pill CTA */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Multilingual Selector Pill */}
           <div className="relative">
             <button
               onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-              className="flex items-center gap-1.5 min-h-11 px-3.5 rounded-full border border-[#BCD0C8] bg-white hover:bg-[#FCF2E8] text-[#175C62] text-xs font-medium transition-colors shadow-xs"
+              className="flex items-center gap-1 min-h-10 sm:min-h-11 px-2.5 sm:px-3.5 rounded-full border border-[#BCD0C8] bg-white hover:bg-[#FCF2E8] text-[#175C62] text-xs font-medium transition-colors shadow-xs"
               aria-label="Select Language"
             >
               <Globe className="w-3.5 h-3.5" />
@@ -99,7 +99,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             {isLangMenuOpen && (
-              <div className="absolute end-0 top-13 z-50 w-36 py-1.5 rounded-2xl bg-white border border-[#BCD0C8] shadow-lg text-xs">
+              <div className="absolute end-0 top-12 sm:top-13 z-50 w-36 py-1.5 rounded-2xl bg-white border border-[#BCD0C8] shadow-lg text-xs">
                 {languages.map((lang) => (
                   <button
                     key={lang.code}
@@ -123,28 +123,23 @@ export const Navbar: React.FC<NavbarProps> = ({
             )}
           </div>
 
-          {/* AI Intelligence status pill */}
-          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#DAE7DE]/50 border border-[#BCD0C8]/60 text-[11px] font-mono text-[#175C62]">
-            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Gemini & Grok AI</span>
-          </div>
-
-          {/* Primary Pill CTA Button (MindRested primary-6000 with 44px min touch target) */}
+          {/* Primary Pill CTA Button (MindRested primary with min touch target) */}
           <button
             onClick={onOpenChat}
-            className="flex items-center gap-2 min-h-11 px-5 py-2.5 rounded-full bg-[#175C62] hover:bg-[#1A2F32] text-[#DAE7DE] font-semibold text-xs tracking-wide transition-all shadow-sm transform hover:-translate-y-0.5"
+            className="flex items-center gap-1.5 sm:gap-2 min-h-10 sm:min-h-11 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#175C62] hover:bg-[#1A2F32] text-[#DAE7DE] font-semibold text-xs tracking-wide transition-all shadow-sm transform hover:-translate-y-0.5"
           >
             <MessageSquare className="w-3.5 h-3.5" />
-            <span className="whitespace-nowrap">{t.navConsultGuide}</span>
+            <span className="hidden sm:inline whitespace-nowrap">{t.navConsultGuide}</span>
+            <span className="sm:hidden text-xs">Guide</span>
           </button>
         </div>
       </div>
 
       {/* Mobile Nav Dock */}
-      <div className="flex md:hidden items-center justify-around py-2 border-t border-[#175C62]/10 bg-[#FCFCF8] text-xs">
+      <div className="flex md:hidden items-center justify-around py-1.5 px-2 border-t border-[#175C62]/10 bg-[#FCFCF8] text-xs">
         <button
           onClick={() => setActiveTab('library')}
-          className={`py-1.5 px-3 rounded-full transition-colors ${
+          className={`min-h-9 py-1 px-3 rounded-full transition-colors flex items-center ${
             activeTab === 'library'
               ? 'bg-[#DAE7DE] text-[#175C62] font-semibold'
               : 'text-[#1A2F32]/70'
@@ -154,7 +149,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('creator')}
-          className={`py-1.5 px-3 rounded-full transition-colors ${
+          className={`min-h-9 py-1 px-3 rounded-full transition-colors flex items-center ${
             activeTab === 'creator'
               ? 'bg-[#DAE7DE] text-[#175C62] font-semibold'
               : 'text-[#1A2F32]/70'
@@ -164,7 +159,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
         <button
           onClick={() => setActiveTab('breathing')}
-          className={`py-1.5 px-3 rounded-full transition-colors ${
+          className={`min-h-9 py-1 px-3 rounded-full transition-colors flex items-center ${
             activeTab === 'breathing'
               ? 'bg-[#DAE7DE] text-[#175C62] font-semibold'
               : 'text-[#1A2F32]/70'

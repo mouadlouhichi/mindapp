@@ -184,7 +184,7 @@ export const SanctuaryLibrary: React.FC<SanctuaryLibraryProps> = ({
             {t.kpiTtsEngine}
           </div>
           <div className="text-sm sm:text-base font-semibold text-[#175C62]">
-            Gemini 3.8 Flash TTS
+            Sanctuary Neural Voice
           </div>
         </div>
       </section>
@@ -222,14 +222,17 @@ export const SanctuaryLibrary: React.FC<SanctuaryLibraryProps> = ({
       </section>
 
       {/* Catalog Cards: MindRested Elevated Interactive Directory Cards */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
         {filteredSessions.map((session) => (
           <article
             key={session.id}
             className="group relative flex flex-col rounded-[1.5rem] border border-[#BCD0C8]/80 bg-white hover:border-[#175C62]/50 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1"
           >
             {/* Visual Frame */}
-            <div className="relative aspect-[16/9] w-full overflow-hidden bg-stone-900">
+            <div
+              onClick={() => onPlaySession(session)}
+              className="relative aspect-[16/9] w-full overflow-hidden bg-stone-900 cursor-pointer"
+            >
               <img
                 src={resolveSessionImageUrl(session.imageUrl, `${session.title} ${session.theme}`)}
                 alt={session.title}
@@ -243,11 +246,11 @@ export const SanctuaryLibrary: React.FC<SanctuaryLibraryProps> = ({
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
 
               {/* Top Controls: Favorite & Delete */}
-              <div className="absolute top-3.5 end-3.5 flex items-center gap-1.5 z-10">
+              <div className="absolute top-3 end-3 sm:top-3.5 sm:end-3.5 flex items-center gap-1.5 z-10" onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => onToggleFavorite(session.id)}
                   aria-label="Save to favorites"
-                  className={`size-10 rounded-full bg-white/90 backdrop-blur-md border border-stone-200 shadow-sm flex items-center justify-center transition-colors ${
+                  className={`size-9 sm:size-10 rounded-full bg-white/90 backdrop-blur-md border border-stone-200 shadow-sm flex items-center justify-center transition-colors ${
                     session.isFavorite ? 'text-rose-500' : 'text-stone-600 hover:text-stone-900'
                   }`}
                 >
@@ -258,18 +261,21 @@ export const SanctuaryLibrary: React.FC<SanctuaryLibraryProps> = ({
                   <button
                     onClick={() => onDeleteSession(session.id)}
                     aria-label="Delete session"
-                    className="size-10 rounded-full bg-white/90 backdrop-blur-md border border-stone-200 shadow-sm flex items-center justify-center text-stone-600 hover:text-rose-600 transition-colors"
+                    className="size-9 sm:size-10 rounded-full bg-white/90 backdrop-blur-md border border-stone-200 shadow-sm flex items-center justify-center text-stone-600 hover:text-rose-600 transition-colors"
                   >
                     <Trash2 className="size-4" />
                   </button>
                 )}
               </div>
 
-              {/* Play Hover Overlay Button */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 backdrop-blur-[2px]">
+              {/* Play Button Overlay (Visible on mobile, revealed on hover on desktop) */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity bg-black/25 backdrop-blur-[1px]">
                 <button
-                  onClick={() => onPlaySession(session)}
-                  className="flex items-center gap-2 min-h-11 px-6 py-2.5 rounded-full bg-[#175C62] hover:bg-[#123F40] text-[#DAE7DE] font-semibold text-xs tracking-wide shadow-xl transition-transform transform scale-95 group-hover:scale-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPlaySession(session);
+                  }}
+                  className="flex items-center gap-2 min-h-10 sm:min-h-11 px-5 sm:px-6 py-2 sm:py-2.5 rounded-full bg-[#175C62] hover:bg-[#123F40] text-[#DAE7DE] font-semibold text-xs tracking-wide shadow-xl transition-transform transform scale-95 sm:group-hover:scale-100"
                 >
                   <Play className="size-3.5 fill-[#DAE7DE]" />
                   <span>Therapist & Piano</span>
@@ -278,7 +284,7 @@ export const SanctuaryLibrary: React.FC<SanctuaryLibraryProps> = ({
             </div>
 
             {/* Card Content Body */}
-            <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+            <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-4">
               <div className="space-y-2">
                 {/* Unboxed Metadata (Zero-Pill Discipline) */}
                 <div className="flex items-center gap-2 text-xs font-mono text-[#175C62] uppercase tracking-wider">

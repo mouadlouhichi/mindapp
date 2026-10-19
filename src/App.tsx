@@ -212,11 +212,11 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3 text-[11px] font-mono text-[#175C62]">
-            <span>gemini-3.8-flash-tts</span>
+            <span>MindRested Clinical Protocols</span>
             <span aria-hidden="true">·</span>
-            <span>gemini-3-pro-image-preview</span>
+            <span>Pranayama Resonance</span>
             <span aria-hidden="true">·</span>
-            <span>gemini-4-argon</span>
+            <span>Acoustic Soundscapes</span>
           </div>
         </div>
       </footer>

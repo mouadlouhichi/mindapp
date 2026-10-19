@@ -68,3 +68,12 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #175C62;
 }
+
+/* Hide scrollbar for clean horizontal pill sliders */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

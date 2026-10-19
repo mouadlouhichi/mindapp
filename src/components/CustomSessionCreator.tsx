@@ -301,13 +301,13 @@ export const CustomSessionCreator: React.FC<CustomSessionCreatorProps> = ({
               <span className="text-xs font-semibold text-[#053333] block">
                 {t.durationLabel}
               </span>
-              <div className="grid grid-cols-5 gap-1.5 p-1 bg-[#DAE7DE]/40 rounded-full border border-[#BCD0C8]/80">
+              <div className="grid grid-cols-5 gap-1 sm:gap-1.5 p-1 bg-[#DAE7DE]/40 rounded-full border border-[#BCD0C8]/80">
                 {[1, 3, 5, 10, 15].map((m) => (
                   <button
                     key={m}
                     type="button"
                     onClick={() => setDurationMinutes(m)}
-                    className={`py-2 text-xs font-mono rounded-full transition-colors ${
+                    className={`py-1.5 sm:py-2 text-[11px] sm:text-xs font-mono rounded-full transition-colors text-center ${
                       durationMinutes === m
                         ? 'bg-[#175C62] text-white font-semibold shadow-xs'
                         : 'text-[#1A2F32]/80 hover:text-[#053333]'
@@ -320,14 +320,14 @@ export const CustomSessionCreator: React.FC<CustomSessionCreatorProps> = ({
             </div>
           </div>
 
-          {/* Section 2: Visual Scenery & Resolution Affordance (gemini-3-pro-image-preview) */}
-          <div className="p-6 sm:p-7 rounded-[1.5rem] border border-[#BCD0C8]/80 bg-white shadow-xs space-y-5 text-start">
+          {/* Section 2: Visual Scenery & Resolution Affordance */}
+          <div className="p-5 sm:p-7 rounded-2xl sm:rounded-[1.5rem] border border-[#BCD0C8]/80 bg-white shadow-xs space-y-5 text-start">
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-mono uppercase tracking-wider text-[#175C62] font-semibold">
                 {t.step2Title}
               </h2>
-              <span className="text-[10px] font-mono text-[#175C62]/70 bg-[#DAE7DE]/60 px-2.5 py-0.5 rounded-full">
-                gemini-3-pro-image-preview
+              <span className="text-[10px] font-mono text-[#175C62]/80 bg-[#DAE7DE]/60 px-2.5 py-0.5 rounded-full">
+                Sanctuary Artistry
               </span>
             </div>
 
@@ -415,14 +415,14 @@ export const CustomSessionCreator: React.FC<CustomSessionCreatorProps> = ({
             </div>
           </div>
 
-          {/* Section 3: Voiceover & Soundscape (gemini-3.8-flash-tts) */}
-          <div className="p-6 sm:p-7 rounded-[1.5rem] border border-[#BCD0C8]/80 bg-white shadow-xs space-y-5 text-start">
+          {/* Section 3: Voiceover & Soundscape */}
+          <div className="p-5 sm:p-7 rounded-2xl sm:rounded-[1.5rem] border border-[#BCD0C8]/80 bg-white shadow-xs space-y-5 text-start">
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-mono uppercase tracking-wider text-[#175C62] font-semibold">
                 {t.step3Title}
               </h2>
-              <span className="text-[10px] font-mono text-[#175C62]/70 bg-[#DAE7DE]/60 px-2.5 py-0.5 rounded-full">
-                gemini-3.8-flash-tts
+              <span className="text-[10px] font-mono text-[#175C62]/80 bg-[#DAE7DE]/60 px-2.5 py-0.5 rounded-full">
+                Sanctuary Neural Narration
               </span>
             </div>
 

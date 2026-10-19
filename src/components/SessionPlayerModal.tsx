@@ -395,87 +395,88 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
       />
 
       {/* Top Header Bar */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-6 bg-gradient-to-b from-black/80 to-transparent">
-        <div className="flex items-center gap-4">
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-3 sm:p-6 bg-gradient-to-b from-black/90 via-black/60 to-transparent">
+        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
           <button
             onClick={onClose}
-            className="size-11 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-colors"
+            className="size-9 sm:size-11 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-colors shrink-0"
             title="Exit Session"
           >
-            <ChevronLeft className="size-5 rtl:-scale-x-100" />
+            <ChevronLeft className="size-4 sm:size-5 rtl:-scale-x-100" />
           </button>
-          <div className="text-start">
-            <h2 className="text-xl font-display font-semibold text-white drop-shadow rtl:font-sans">
+          <div className="text-start min-w-0">
+            <h2 className="text-sm sm:text-xl font-display font-semibold text-white drop-shadow rtl:font-sans truncate max-w-[170px] sm:max-w-md">
               {session.title}
             </h2>
-            <div className="text-xs font-mono text-[#DAE7DE] drop-shadow flex items-center gap-2">
+            <div className="text-[10px] sm:text-xs font-mono text-[#DAE7DE] drop-shadow flex items-center gap-1.5 sm:gap-2 truncate">
               <span>{session.theme}</span>
-              <span aria-hidden="true">·</span>
-              <span>{session.imageSize || '2K'} {t.artLabel}</span>
               <span aria-hidden="true">·</span>
               <span>{session.audioVoice || 'Kore'} {t.voiceLabel}</span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {/* Toggle Breathing Circle */}
           <button
             onClick={() => setShowBreathingCircle(!showBreathingCircle)}
-            className={`size-11 rounded-full border backdrop-blur-md flex items-center justify-center transition-colors ${
+            className={`size-9 sm:size-11 rounded-full border backdrop-blur-md flex items-center justify-center transition-colors ${
               showBreathingCircle
                 ? 'bg-[#175C62] border-white/30 text-white'
                 : 'bg-black/40 border-white/20 text-white/70 hover:text-white'
             }`}
             title="Toggle Breathing Guide"
           >
-            <Wind className="size-4" />
+            <Wind className="size-3.5 sm:size-4" />
           </button>
 
           {/* Sound & Voice Settings */}
           <button
             onClick={() => setShowMixerDrawer(!showMixerDrawer)}
-            className={`size-11 rounded-full border backdrop-blur-md flex items-center justify-center transition-colors ${
+            className={`size-9 sm:size-11 rounded-full border backdrop-blur-md flex items-center justify-center transition-colors ${
               showMixerDrawer
                 ? 'bg-[#175C62] border-white/30 text-white'
                 : 'bg-black/40 border-white/20 text-white/70 hover:text-white'
             }`}
             title="Soundscape & Mixer"
           >
-            <Sliders className="size-4" />
+            <Sliders className="size-3.5 sm:size-4" />
           </button>
 
           {/* Fullscreen */}
           <button
             onClick={toggleFullscreen}
-            className="size-11 rounded-full bg-black/40 hover:bg-black/60 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-colors"
+            className="hidden sm:flex size-9 sm:size-11 rounded-full bg-black/40 hover:bg-black/60 text-white border border-white/20 backdrop-blur-md items-center justify-center transition-colors"
+            title="Fullscreen"
           >
             {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
           </button>
 
           <button
             onClick={onClose}
-            className="size-11 rounded-full bg-black/40 hover:bg-black/60 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-colors"
+            className="size-9 sm:size-11 rounded-full bg-black/40 hover:bg-black/60 text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-colors"
+            title="Close"
           >
-            <X className="size-5" />
+            <X className="size-4 sm:size-5" />
           </button>
         </div>
       </div>
 
       {/* Center Stage & Teleprompter */}
-      <div className="relative z-10 flex flex-col items-center justify-center max-w-xl mx-auto px-4 text-center space-y-6">
+      <div className="relative z-10 flex-1 overflow-y-auto px-4 pt-20 pb-36 sm:py-24 flex flex-col items-center justify-start sm:justify-center max-w-xl mx-auto w-full text-center space-y-4 sm:space-y-6 no-scrollbar">
         {showBreathingCircle && (
-          <div className="transform scale-95 transition-all">
+          <div className="transform scale-90 sm:scale-95 transition-all w-full flex justify-center">
             <BreathingVisualizer
               pattern={session.breathingPattern}
               compact={false}
+              theme="dark"
               currentLocale={currentLocale}
             />
           </div>
         )}
 
         {/* Teleprompter Card */}
-        <div className="max-w-lg p-6 sm:p-7 rounded-[1.5rem] bg-[#123F40]/85 backdrop-blur-xl border border-white/15 text-white shadow-2xl space-y-2.5">
+        <div className="w-full max-w-lg p-5 sm:p-7 rounded-[1.5rem] bg-[#123F40]/85 backdrop-blur-xl border border-white/15 text-white shadow-2xl space-y-2.5">
           <div className="flex items-center justify-between text-xs font-mono text-[#DAE7DE] uppercase tracking-widest pb-2 border-b border-white/10">
             <span>
               {t.stageLabel} {currentStageIndex + 1} {t.ofLabel} {session.stages.length}
@@ -483,18 +484,18 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
             <span>{activeStage.time}</span>
           </div>
 
-          <h3 className="text-lg font-display font-semibold text-white rtl:font-sans">
+          <h3 className="text-base sm:text-lg font-display font-semibold text-white rtl:font-sans">
             {activeStage.title}
           </h3>
-          <p className="text-sm sm:text-base font-serif italic text-white/90 leading-relaxed font-light">
+          <p className="text-xs sm:text-base font-serif italic text-white/90 leading-relaxed font-light">
             "{activeStage.guidance}"
           </p>
 
-          <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-[#DAE7DE]/80">
-            <span>{t.mantraLabel}: "{session.mantra}"</span>
+          <div className="pt-3 border-t border-white/10 flex items-center justify-between text-[11px] sm:text-xs text-[#DAE7DE]/80">
+            <span className="truncate max-w-[200px] sm:max-w-xs">{t.mantraLabel}: "{session.mantra}"</span>
             <button
               onClick={() => setShowScriptDrawer(!showScriptDrawer)}
-              className="text-[#F1E8D7] hover:underline font-medium"
+              className="text-[#F1E8D7] hover:underline font-medium shrink-0 ms-2"
             >
               {showScriptDrawer ? t.hideScript : t.viewScript}
             </button>
@@ -502,8 +503,8 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
         </div>
 
         {resolveAudioSource(session) ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 p-3 px-4.5 rounded-2xl bg-[#123F40]/85 backdrop-blur-md border border-white/20 text-xs text-white shadow-xl">
-            <div className="flex items-center gap-2.5">
+          <div className="w-full max-w-lg flex flex-wrap items-center justify-between gap-2.5 p-3 px-4 rounded-2xl bg-[#123F40]/85 backdrop-blur-md border border-white/20 text-xs text-white shadow-xl">
+            <div className="flex items-center gap-2">
               <span className="relative flex size-2.5">
                 {isPlaying && (
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#DAE7DE] opacity-75"></span>
@@ -514,7 +515,7 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
                 Voice: {voiceChoice || session.audioVoice || 'Kore'}
               </span>
               <span className="text-white/60 text-[11px] hidden sm:inline font-mono">
-                • Authentic Human Meditation Voiceover & Sanctuary Soundscape
+                • Meditation Sanctuary Narration
               </span>
             </div>
             <button
@@ -592,7 +593,7 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
 
       {/* Sanctuary Mixer Drawer */}
       {showMixerDrawer && (
-        <div className="absolute bottom-24 end-6 z-30 w-80 p-6 rounded-2xl bg-[#123F40]/95 backdrop-blur-xl border border-white/20 shadow-2xl text-white space-y-4 text-xs max-h-[80vh] overflow-y-auto">
+        <div className="fixed sm:absolute inset-x-3 bottom-24 sm:inset-x-auto sm:end-6 sm:bottom-24 z-40 w-auto sm:w-84 max-w-[calc(100vw-1.5rem)] p-5 sm:p-6 rounded-2xl bg-[#123F40]/95 backdrop-blur-xl border border-white/20 shadow-2xl text-white space-y-4 text-xs max-h-[75vh] overflow-y-auto">
           <div className="flex items-center justify-between pb-2 border-b border-white/15">
             <span className="font-mono text-xs uppercase tracking-wider text-[#DAE7DE] font-semibold">
               {t.soundscapeMixer}
@@ -812,7 +813,7 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
 
       {/* Script Drawer */}
       {showScriptDrawer && (
-        <div className="absolute top-20 bottom-24 end-6 w-80 sm:w-96 z-30 p-6 rounded-2xl bg-[#123F40]/95 backdrop-blur-xl border border-white/20 shadow-2xl overflow-y-auto space-y-4 text-xs text-white">
+        <div className="fixed sm:absolute inset-x-3 top-16 bottom-24 sm:inset-x-auto sm:end-6 sm:top-20 sm:bottom-24 w-auto sm:w-96 max-w-[calc(100vw-1.5rem)] z-40 p-5 sm:p-6 rounded-2xl bg-[#123F40]/95 backdrop-blur-xl border border-white/20 shadow-2xl overflow-y-auto space-y-4 text-xs text-white">
           <div className="flex items-center justify-between pb-2 border-b border-white/15">
             <span className="font-mono uppercase tracking-wider text-[#DAE7DE] text-[11px] font-semibold">
               {t.scriptLabel}
@@ -843,10 +844,10 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
       )}
 
       {/* Bottom Floating Control Bar */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 p-6 bg-gradient-to-t from-black via-black/90 to-transparent">
-        <div className="max-w-2xl mx-auto space-y-3">
-          <div className="flex items-center gap-3 text-xs font-mono text-white/80">
-            <span className="tabular-nums">{formatTime(currentTime)}</span>
+      <div className="absolute bottom-0 left-0 right-0 z-20 px-3 sm:px-6 py-2.5 sm:py-5 bg-gradient-to-t from-black via-black/95 to-transparent">
+        <div className="max-w-2xl mx-auto space-y-2 sm:space-y-3">
+          <div className="flex items-center gap-2 sm:gap-3 text-xs font-mono text-white/80">
+            <span className="tabular-nums text-[10px] sm:text-xs shrink-0">{formatTime(currentTime)}</span>
             <input
               type="range"
               min="0"
@@ -855,17 +856,17 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
               onChange={(e) => handleSeek(parseFloat(e.target.value))}
               className="flex-1 h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#F1E8D7]"
             />
-            <span className="tabular-nums">{formatTime(duration)}</span>
+            <span className="tabular-nums text-[10px] sm:text-xs shrink-0">{formatTime(duration)}</span>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-1 sm:gap-2">
             {/* Speed Pills */}
-            <div className="flex items-center gap-1 font-mono text-[10px]">
+            <div className="flex items-center gap-1 font-mono text-[9px] sm:text-[10px]">
               {[0.8, 1.0, 1.2].map((rate) => (
                 <button
                   key={rate}
                   onClick={() => setPlaybackRate(rate)}
-                  className={`px-2.5 py-1 rounded-full border transition-colors ${
+                  className={`px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full border transition-colors ${
                     playbackRate === rate
                       ? 'bg-white text-[#123F40] font-bold border-white'
                       : 'border-white/20 text-white/70 hover:text-white'
@@ -877,34 +878,34 @@ export const SessionPlayerModal: React.FC<SessionPlayerModalProps> = ({
             </div>
 
             {/* Main Play/Pause Pill Control */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={() => handleSeek(Math.max(0, currentTime - 10))}
-                className="size-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                className="size-8 sm:size-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
                 title="Rewind 10s"
               >
-                <RotateCcw className="size-4" />
+                <RotateCcw className="size-3.5 sm:size-4" />
               </button>
 
               <button
                 onClick={togglePlayPause}
-                className="size-14 rounded-full bg-[#F1E8D7] hover:bg-white text-[#123F40] flex items-center justify-center transition-all shadow-xl transform hover:scale-105 active:scale-95"
+                className="size-11 sm:size-14 rounded-full bg-[#F1E8D7] hover:bg-white text-[#123F40] flex items-center justify-center transition-all shadow-xl transform hover:scale-105 active:scale-95"
               >
-                {isPlaying ? <Pause className="size-6 fill-[#123F40]" /> : <Play className="size-6 fill-[#123F40] ms-0.5" />}
+                {isPlaying ? <Pause className="size-5 sm:size-6 fill-[#123F40]" /> : <Play className="size-5 sm:size-6 fill-[#123F40] ms-0.5" />}
               </button>
 
               <button
                 onClick={() => handleSeek(Math.min(duration, currentTime + 10))}
-                className="size-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                className="size-8 sm:size-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
                 title="Forward 10s"
               >
-                <RotateCcw className="size-4 transform scale-x-[-1]" />
+                <RotateCcw className="size-3.5 sm:size-4 transform scale-x-[-1]" />
               </button>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-[#DAE7DE]">
-              <Headphones className="size-4 text-[#F1E8D7]" />
-              <span className="hidden sm:inline capitalize font-mono text-[11px]">
+            <div className="flex items-center gap-1 sm:gap-2 text-xs text-[#DAE7DE]">
+              <Headphones className="size-3.5 sm:size-4 text-[#F1E8D7]" />
+              <span className="hidden sm:inline capitalize font-mono text-[11px] truncate max-w-[100px]">
                 {currentSoundscape.replace('_', ' ')}
               </span>
             </div>
